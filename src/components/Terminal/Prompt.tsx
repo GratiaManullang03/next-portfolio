@@ -3,9 +3,11 @@
 import React, { useState, useEffect } from 'react';
 
 export default function Prompt() {
-    const [time, setTime] = useState('Loading time...');
+    const [time, setTime] = useState('');
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        setMounted(true);
         const updateTime = () => {
             const now = new Date();
             const timeString = now.toLocaleTimeString('en-US', {
@@ -23,14 +25,12 @@ export default function Prompt() {
     }, []);
 
     return (
-        <div className="px-[40px]">
+        <div className="px-[20px]">
             {/* Row 1 */}
             <div className="flex items-center w-full h-[34px] relative">
                 {/* Bracket Left */}
                 <div className="h-full flex items-center px-[6px]">
-                    <span className="text-[#555] text-[26px] font-light leading-none">
-                        ╭
-                    </span>
+                    <span className="text-[#555] text-[26px] font-light leading-none" suppressHydrationWarning>╭</span>
                 </div>
 
                 {/* Path Box */}
@@ -53,14 +53,12 @@ export default function Prompt() {
                         background: 'linear-gradient(270deg, #1f1f1f 0%, #1f1f1f 5%, #282828 5%, #282828 10%, #323232 10%, #323232 15%, #3d3d3d 15%, #3d3d3d 85%, #323232 85%, #323232 90%, #282828 90%, #282828 95%, #1f1f1f 95%, #1f1f1f 100%)'
                     }}
                 >
-                    {time}
+                    {mounted ? time : ''}
                 </div>
 
                 {/* Bracket Right */}
                 <div className="h-full flex items-center px-[6px]">
-                    <span className="text-[#555] text-[26px] font-light leading-none">
-                        ╮
-                    </span>
+                    <span className="text-[#555] text-[26px] font-light leading-none" suppressHydrationWarning>╮</span>
                 </div>
             </div>
 
@@ -68,9 +66,7 @@ export default function Prompt() {
             <div className="flex items-center w-full h-[34px] relative -mt-[3px]">
                 {/* Bracket Left */}
                 <div className="h-full flex items-center px-[6px]">
-                    <span className="text-[#555] text-[26px] font-light leading-none">
-                        ╰
-                    </span>
+                    <span className="text-[#555] text-[26px] font-light leading-none" suppressHydrationWarning>╰</span>
                 </div>
 
                 {/* Input Area */}
@@ -81,29 +77,14 @@ export default function Prompt() {
                     <span className="text-white text-[14px] tracking-[0.5px] font-medium">
                         npm run dev
                     </span>
-                    <span className="inline-block w-[10px] h-[18px] bg-[#a855f7] ml-[8px] animate-[blink_1s_step-end_infinite]"></span>
+                    <span className="inline-block w-[10px] h-[18px] bg-[#a855f7] ml-[8px] animate-blink"></span>
                 </div>
 
                 {/* Bracket Right */}
                 <div className="h-full flex items-center px-[6px]">
-                    <span className="text-[#555] text-[26px] font-light leading-none">
-                        ╯
-                    </span>
+                    <span className="text-[#555] text-[26px] font-light leading-none" suppressHydrationWarning>╯</span>
                 </div>
             </div>
-
-            <style jsx>{`
-                @keyframes blink {
-                    0%,
-                    50% {
-                        opacity: 1;
-                    }
-                    51%,
-                    100% {
-                        opacity: 0;
-                    }
-                }
-            `}</style>
         </div>
     );
 }

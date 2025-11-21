@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="id">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Neural Synapse Grid</title>
+        <style>
+            body,
+            html {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                background-color: #000000; /* Hitam Total untuk kontras Glow */
+            }
+            canvas {
+                display: block;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="gridCanvas"></canvas>
+
+        <script>
+            const canvas = document.getElementById('gridCanvas');
+            const ctx = canvas.getContext('2d');
+
+            const config = {
+                tileSize: 34,
+                gap: 2,
+                baseRadius: 250, // Radius lebih besar untuk koneksi
+                baseColor: '#050505', // Sangat gelap
+                activeColor: '#6a00ff', // Ungu Neon
+                secondaryColor: '#00e5ff', // Cyan Neon
+                connectThreshold: 0.4, // Ambang batas energi untuk membuat garis koneksi
+                smoothness: 0.08, // Sangat smooth
+            };
+
+            let width, height, cols, rows;
+            let mouse = {
+                x: -1000,
+                y: -1000,
+                prevX: -1000,
+                prevY: -1000,
+                speed: 0,
+            };
+            let cursor = { x: -1000, y: -1000 };
+            let gridState = [];
+            let particles = [];
+            let time = 0;
+
+            function hexToRgb(hex) {
+                const res = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(
+                    hex
+                );
+                return res
+                    ? {
+                          r: parseInt(res[1], 16),
+                          g: parseInt(res[2], 16),
+                          b: parseInt(res[3], 16),
+                      }
+                    : { r: 0, g: 0, b: 0 };
+            }
+
+            const activeRgb = hexToRgb(config.activeColor);
+            const secondaryRgb = hexToRgb(config.secondaryColor);
+
+            function lerp(start, end, amt) {
+                return (1 - amt) * start + amt * end;
+            }
+
+            function init() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+                cols = Math.ceil(width / (config.tileSize + config.gap));
+                rows = Math.ceil(height / (config.tileSize + config.gap));
+
+                gridState = [];
+                for (let i = 0; i < cols; i++) {
+                    gridState[i] = [];
+                    for (let j = 0; j < rows; j++) {
+                        gridState[i][j] = {
+                            energy: 0, // Tingkat energi (cahaya) 0.0 - 1.0
+                            angle: 0,
+                        };
+                    }
+                }
+            }
+
+            // Particle Class untuk "Sparks"
+            class Particle {
+                constructor(x, y, speed) {
+                    this.x = x;
+                    this.y = y;
+                    const angle = Math.random() * Math.PI * 2;
+                    const vel = Math.random() * speed * 0.3 + 2;
+                    this.vx = Math.cos(angle) * vel;
+                    this.vy = Math.sin(angle) * vel;
+                    this.life = 1.0;
+                    this.decay = Math.random() * 0.05 + 0.02;
+                    this.color =
+                        Math.random() > 0.5
+                            ? config.activeColor
+                            : config.secondaryColor;
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.vx *= 0.92; // Friction
+                    this.vy *= 0.92;
+                    this.life -= this.decay;
+                }
+                draw(ctx) {
+                    ctx.globalAlpha = this.life;
+                    ctx.fillStyle = this.color;
+                    ctx.fillRect(this.x, this.y, 3, 3);
+                }
+            }
+
+            function animate() {
+                time += 0.02;
+
+                // --- Physics & Mouse ---
+                const distX = mouse.x - mouse.prevX;
+                const distY = mouse.y - mouse.prevY;
+                const currentSpeed = Math.hypot(distX, distY);
+                mouse.speed = lerp(mouse.speed, currentSpeed, 0.1);
+                mouse.prevX = mouse.x;
+                mouse.prevY = mouse.y;
+
+                cursor.x = lerp(cursor.x, mouse.x, config.smoothness);
+                cursor.y = lerp(cursor.y, mouse.y, config.smoothness);
+
+                // Spawn particles saat gerak cepat
+                if (mouse.speed > 15) {
+                    for (let k = 0; k < 2; k++)
+                        particles.push(
+                            new Particle(mouse.x, mouse.y, mouse.speed)
+                        );
+                }
+
+                // Bersihkan Canvas
+                // Kita pakai opacity 0.2 di fillRect hitam untuk membuat efek "Trail/Ekor" (Smoke effect)
+                // Ini membuat frame sebelumnya tidak langsung hilang, tapi memudar pelan-pelan
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.fillRect(0, 0, width, height);
+
+                // Update Particles
+                particles = particles.filter((p) => p.life > 0);
+                particles.forEach((p) => {
+                    p.update();
+                });
+
+                // --- GRID CALCULATION ---
+                // Kita update state energi dulu untuk semua grid
+                for (let i = 0; i < cols; i++) {
+                    for (let j = 0; j < rows; j++) {
+                        const x = i * (config.tileSize + config.gap);
+                        const y = j * (config.tileSize + config.gap);
+                        const centerX = x + config.tileSize / 2;
+                        const centerY = y + config.tileSize / 2;
+
+                        const dx = cursor.x - centerX;
+                        const dy = cursor.y - centerY;
+                        const dist = Math.hypot(dx, dy);
+
+                        // Hitung Target Energi berdasarkan jarak mouse
+                        let targetEnergy = 0;
+                        if (dist < config.baseRadius) {
+                            let mInt = 1 - dist / config.baseRadius;
+                            targetEnergy = mInt * mInt; // Quadratic ease
+                        }
+
+                        // Tambahkan ambient noise
+                        const noise =
+                            (Math.sin(i * 0.2 + time) +
+                                Math.cos(j * 0.2 + time)) *
+                            0.5;
+                        if (noise > 0.8) targetEnergy += 0.1; // Random glitter
+
+                        // Lerp energy (biar naik turunnya smooth)
+                        gridState[i][j].energy = lerp(
+                            gridState[i][j].energy,
+                            targetEnergy,
+                            0.1
+                        );
+
+                        // Hitung sudut putar (Magnetic)
+                        if (dist < config.baseRadius) {
+                            gridState[i][j].angle = lerp(
+                                gridState[i][j].angle,
+                                Math.atan2(dy, dx),
+                                0.1
+                            );
+                        } else {
+                            // Kembali lurus jika jauh
+                            gridState[i][j].angle = lerp(
+                                gridState[i][j].angle,
+                                0,
+                                0.05
+                            );
+                        }
+                    }
+                }
+
+                // --- RENDERING (ADDITIVE BLENDING) ---
+                // Kunci efek neon ada disini: 'lighter' membuat warna tumpang tindih jadi putih
+                ctx.globalCompositeOperation = 'lighter';
+
+                // 1. Draw Particles (Layer Bawah)
+                particles.forEach((p) => p.draw(ctx));
+
+                // 2. Draw Grid & Connections
+                for (let i = 0; i < cols; i++) {
+                    for (let j = 0; j < rows; j++) {
+                        const state = gridState[i][j];
+                        // Optimization: Jika energi 0, jangan gambar apa-apa (Black is Black)
+                        if (state.energy < 0.01) continue;
+
+                        const x = i * (config.tileSize + config.gap);
+                        const y = j * (config.tileSize + config.gap);
+                        const centerX = x + config.tileSize / 2;
+                        const centerY = y + config.tileSize / 2;
+
+                        // --- DRAW CONNECTIONS (NEURAL LINES) ---
+                        // Cek tetangga kanan (i+1) dan bawah (j+1)
+                        ctx.lineWidth = 2 * state.energy; // Tebal garis tergantung energi
+
+                        // Koneksi ke Kanan
+                        if (i < cols - 1) {
+                            const rightState = gridState[i + 1][j];
+                            if (
+                                rightState.energy > config.connectThreshold &&
+                                state.energy > config.connectThreshold
+                            ) {
+                                // Rata-rata energi kedua titik
+                                const avgEnergy =
+                                    (state.energy + rightState.energy) / 2;
+                                ctx.strokeStyle = `rgba(${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}, ${avgEnergy})`;
+                                ctx.beginPath();
+                                ctx.moveTo(centerX, centerY);
+                                ctx.lineTo(
+                                    centerX + config.tileSize + config.gap,
+                                    centerY
+                                );
+                                ctx.stroke();
+                            }
+                        }
+                        // Koneksi ke Bawah
+                        if (j < rows - 1) {
+                            const downState = gridState[i][j + 1];
+                            if (
+                                downState.energy > config.connectThreshold &&
+                                state.energy > config.connectThreshold
+                            ) {
+                                const avgEnergy =
+                                    (state.energy + downState.energy) / 2;
+                                ctx.strokeStyle = `rgba(${secondaryRgb.r}, ${secondaryRgb.g}, ${secondaryRgb.b}, ${avgEnergy})`;
+                                ctx.beginPath();
+                                ctx.moveTo(centerX, centerY);
+                                ctx.lineTo(
+                                    centerX,
+                                    centerY + config.tileSize + config.gap
+                                );
+                                ctx.stroke();
+                            }
+                        }
+
+                        // --- DRAW BOX ---
+                        ctx.save();
+                        ctx.translate(centerX, centerY);
+                        ctx.rotate(state.angle);
+
+                        // Warna berdasarkan energi: Ungu -> Cyan -> Putih
+                        // Mixing logic:
+                        let r = activeRgb.r;
+                        let g = activeRgb.g;
+                        let b = activeRgb.b;
+
+                        // Semakin tinggi energi, geser ke Cyan (Secondary)
+                        r += (secondaryRgb.r - r) * state.energy;
+                        g += (secondaryRgb.g - g) * state.energy;
+                        b += (secondaryRgb.b - b) * state.energy;
+
+                        ctx.fillStyle = `rgba(${Math.round(r)},${Math.round(
+                            g
+                        )},${Math.round(b)}, ${state.energy})`;
+
+                        // Skala juga dipengaruhi energi
+                        const scale = 0.5 + 0.5 * state.energy;
+                        ctx.scale(scale, scale);
+
+                        ctx.fillRect(
+                            -config.tileSize / 2,
+                            -config.tileSize / 2,
+                            config.tileSize,
+                            config.tileSize
+                        );
+
+                        // Highlight Inti (Core Glow)
+                        if (state.energy > 0.6) {
+                            ctx.fillStyle = '#ffffff';
+                            ctx.fillRect(-4, -4, 8, 8);
+                        }
+
+                        ctx.restore();
+                    }
+                }
+
+                requestAnimationFrame(animate);
+            }
+
+            window.addEventListener('mousemove', (e) => {
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
+            });
+
+            window.addEventListener(
+                'touchmove',
+                (e) => {
+                    mouse.x = e.touches[0].clientX;
+                    mouse.y = e.touches[0].clientY;
+                },
+                { passive: true }
+            );
+
+            window.addEventListener('resize', init);
+            init();
+            animate();
+        </script>
+    </body>
+</html>

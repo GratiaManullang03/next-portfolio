@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="id">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Kinetic Magnetic Armor</title>
+        <style>
+            body,
+            html {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                background-color: #050505;
+            }
+            canvas {
+                display: block;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="gridCanvas"></canvas>
+
+        <script>
+            const canvas = document.getElementById('gridCanvas');
+            const ctx = canvas.getContext('2d');
+
+            const config = {
+                tileSize: 34, // Ukuran kotak sedikit dibesarkan
+                gap: 2,
+                baseRadius: 200, // Radius pengaruh magnet
+                baseColor: '#0a0a0a',
+                activeColor: '#5227FF',
+                rippleColor: '#00f7ff',
+                particleColor: '#ffffff', // Warna percikan
+                rotationEase: 0.1, // Kehalusan putaran (semakin kecil semakin berat)
+                scaleEase: 0.1,
+            };
+
+            let width, height, cols, rows;
+            let mouse = {
+                x: -1000,
+                y: -1000,
+                prevX: -1000,
+                prevY: -1000,
+                speed: 0,
+            };
+            let cursor = { x: -1000, y: -1000 };
+            let ripples = [];
+            let particles = []; // Array untuk percikan
+            let time = 0;
+
+            // Array untuk menyimpan state rotasi setiap kotak (agar smooth)
+            let gridState = [];
+
+            function hexToRgb(hex) {
+                const res = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(
+                    hex
+                );
+                return res
+                    ? {
+                          r: parseInt(res[1], 16),
+                          g: parseInt(res[2], 16),
+                          b: parseInt(res[3], 16),
+                      }
+                    : { r: 0, g: 0, b: 0 };
+            }
+
+            const baseRgb = hexToRgb(config.baseColor);
+            const activeRgb = hexToRgb(config.activeColor);
+            const rippleRgb = hexToRgb(config.rippleColor);
+
+            function init() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+                cols = Math.ceil(width / (config.tileSize + config.gap));
+                rows = Math.ceil(height / (config.tileSize + config.gap));
+
+                // Reset grid state
+                gridState = [];
+                for (let i = 0; i < cols; i++) {
+                    gridState[i] = [];
+                    for (let j = 0; j < rows; j++) {
+                        gridState[i][j] = {
+                            angle: 0, // Sudut putaran saat ini
+                            scale: 1, // Skala saat ini
+                        };
+                    }
+                }
+            }
+
+            function lerp(start, end, amt) {
+                return (1 - amt) * start + amt * end;
+            }
+
+            // Class Particle Sederhana
+            class Particle {
+                constructor(x, y, speed) {
+                    this.x = x;
+                    this.y = y;
+                    const angle = Math.random() * Math.PI * 2;
+                    const velocity = Math.random() * speed * 0.2;
+                    this.vx = Math.cos(angle) * velocity;
+                    this.vy = Math.sin(angle) * velocity;
+                    this.life = 1.0; // 1.0 = hidup, 0.0 = mati
+                    this.decay = Math.random() * 0.03 + 0.01;
+                }
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.life -= this.decay;
+                }
+                draw(ctx) {
+                    ctx.globalAlpha = this.life;
+                    ctx.fillStyle = config.particleColor;
+                    ctx.fillRect(this.x, this.y, 2, 2); // Partikel kotak kecil
+                    ctx.globalAlpha = 1.0;
+                }
+            }
+
+            function animate() {
+                time += 0.01;
+
+                // --- Physics Update ---
+                const distX = mouse.x - mouse.prevX;
+                const distY = mouse.y - mouse.prevY;
+                const currentSpeed = Math.hypot(distX, distY);
+                mouse.speed = lerp(mouse.speed, currentSpeed, 0.05);
+                mouse.prevX = mouse.x;
+                mouse.prevY = mouse.y;
+
+                // Spawn Particles jika mouse bergerak cepat
+                if (mouse.speed > 5) {
+                    const amount = Math.min(5, Math.floor(mouse.speed / 10));
+                    for (let k = 0; k < amount; k++) {
+                        particles.push(
+                            new Particle(mouse.x, mouse.y, mouse.speed)
+                        );
+                    }
+                }
+
+                cursor.x = lerp(cursor.x, mouse.x, 0.1);
+                cursor.y = lerp(cursor.y, mouse.y, 0.1);
+
+                // Clear
+                ctx.fillStyle = '#050505';
+                ctx.fillRect(0, 0, width, height);
+
+                // Update & Draw Particles (Layer Bawah)
+                particles = particles.filter((p) => p.life > 0);
+                particles.forEach((p) => {
+                    p.update();
+                    p.draw(ctx);
+                });
+
+                // Update Ripples
+                ripples = ripples.filter((r) => {
+                    r.age += 1;
+                    r.radius += 5;
+                    return r.age < r.lifespan;
+                });
+
+                // --- GRID LOOP ---
+                for (let i = 0; i < cols; i++) {
+                    for (let j = 0; j < rows; j++) {
+                        const x = i * (config.tileSize + config.gap);
+                        const y = j * (config.tileSize + config.gap);
+                        // Titik Pusat Kotak (Pivot Point)
+                        const centerX = x + config.tileSize / 2;
+                        const centerY = y + config.tileSize / 2;
+
+                        const dx = cursor.x - centerX;
+                        const dy = cursor.y - centerY;
+                        const dist = Math.hypot(dx, dy);
+
+                        // State kotak ini
+                        if (!gridState[i]) gridState[i] = [];
+                        if (!gridState[i][j])
+                            gridState[i][j] = { angle: 0, scale: 1 };
+                        const state = gridState[i][j];
+
+                        // --- 1. LOGIKA KINETIK (ROTASI & SCALE) ---
+                        let targetAngle = 0;
+                        let targetScale = 1;
+
+                        if (dist < config.baseRadius) {
+                            // Menghitung sudut ke arah mouse
+                            const angleToMouse = Math.atan2(dy, dx);
+
+                            // Intensity: 1 di pusat mouse, 0 di pinggir radius
+                            const intensity = 1 - dist / config.baseRadius;
+                            const smoothInt = intensity * intensity; // Ease in
+
+                            // Target rotasi: Sejajar dengan mouse
+                            targetAngle = angleToMouse * smoothInt;
+
+                            // Target scale: Mengecil sedikit saat dekat mouse (Efek kedalaman)
+                            // Semakin cepat mouse, semakin kecil kotaknya (seperti tertiup angin)
+                            const speedFactor = Math.min(1, mouse.speed / 50);
+                            targetScale = 1 - smoothInt * 0.4 * speedFactor;
+                        }
+
+                        // Interpolasi (Lerp) agar gerakan rotasi halus (mekanis)
+                        state.angle = lerp(
+                            state.angle,
+                            targetAngle,
+                            config.rotationEase
+                        );
+                        state.scale = lerp(
+                            state.scale,
+                            targetScale,
+                            config.scaleEase
+                        );
+
+                        // --- 2. LOGIKA WARNA (LIQUID) ---
+                        let r = baseRgb.r,
+                            g = baseRgb.g,
+                            b = baseRgb.b;
+                        let light = 0;
+
+                        // Ambient noise (Napas halus)
+                        const noise =
+                            Math.sin(i * 0.1 + time) *
+                            Math.cos(j * 0.1 + time * 0.5);
+                        const ambient = Math.max(0, noise * 0.1);
+
+                        if (dist < config.baseRadius) {
+                            let mInt = 1 - dist / config.baseRadius;
+                            light = mInt * mInt * mInt;
+                        }
+
+                        // Ripple
+                        let rippleLight = 0;
+                        ripples.forEach((rip) => {
+                            const dToRip = Math.hypot(
+                                centerX - rip.x,
+                                centerY - rip.y
+                            );
+                            if (Math.abs(dToRip - rip.radius) < 40) {
+                                rippleLight +=
+                                    (1 - Math.abs(dToRip - rip.radius) / 40) *
+                                    (1 - rip.age / rip.lifespan);
+                            }
+                        });
+
+                        // Mixing Color
+                        // Base + Ambient
+                        r += (activeRgb.r - r) * ambient;
+                        g += (activeRgb.g - g) * ambient;
+                        b += (activeRgb.b - b) * ambient;
+
+                        // Mouse Light
+                        if (light > 0) {
+                            r += (activeRgb.r - r) * light;
+                            g += (activeRgb.g - g) * light;
+                            b += (activeRgb.b - b) * light;
+                        }
+                        // Ripple (Cyan)
+                        if (rippleLight > 0) {
+                            r += (rippleRgb.r - r) * rippleLight;
+                            g += (rippleRgb.g - g) * rippleLight;
+                            b += (rippleRgb.b - b) * rippleLight;
+                        }
+
+                        // Clamp
+                        r = Math.min(255, Math.max(0, r));
+                        g = Math.min(255, Math.max(0, g));
+                        b = Math.min(255, Math.max(0, b));
+
+                        // --- 3. DRAWING (TRANSFORMASI MATRIKS) ---
+                        ctx.save();
+
+                        // Pindahkan kanvas ke titik tengah kotak
+                        ctx.translate(centerX, centerY);
+
+                        // Putar kanvas
+                        ctx.rotate(state.angle);
+
+                        // Scale kanvas
+                        ctx.scale(state.scale, state.scale);
+
+                        ctx.fillStyle = `rgb(${Math.round(r)},${Math.round(
+                            g
+                        )},${Math.round(b)})`;
+
+                        // Gambar kotak (koordinat relatif terhadap titik tengah 0,0)
+                        // Kita gambar sedikit lebih kecil dari tileSize agar saat berputar tidak saling tabrakan parah
+                        const drawSize = config.tileSize - 1;
+                        ctx.fillRect(
+                            -drawSize / 2,
+                            -drawSize / 2,
+                            drawSize,
+                            drawSize
+                        );
+
+                        // Highlight pinggir kotak (Efek metalik/3D)
+                        if (light > 0.1) {
+                            ctx.fillStyle = 'rgba(255,255,255,0.1)';
+                            ctx.fillRect(
+                                -drawSize / 2,
+                                -drawSize / 2,
+                                drawSize,
+                                2
+                            ); // Top highlight
+                        }
+
+                        ctx.restore();
+                    }
+                }
+
+                requestAnimationFrame(animate);
+            }
+
+            window.addEventListener('mousemove', (e) => {
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
+            });
+
+            window.addEventListener('click', (e) => {
+                ripples.push({
+                    x: e.clientX,
+                    y: e.clientY,
+                    radius: 0,
+                    lifespan: 80,
+                    age: 0,
+                });
+                // Efek kejut saat klik: paksa particle keluar banyak
+                for (let k = 0; k < 20; k++) {
+                    particles.push(new Particle(e.clientX, e.clientY, 50));
+                }
+            });
+
+            window.addEventListener(
+                'touchmove',
+                (e) => {
+                    mouse.x = e.touches[0].clientX;
+                    mouse.y = e.touches[0].clientY;
+                },
+                { passive: true }
+            );
+
+            window.addEventListener('resize', init);
+
+            init();
+            animate();
+        </script>
+    </body>
+</html>

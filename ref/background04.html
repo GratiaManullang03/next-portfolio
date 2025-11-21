@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="id">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Neon Fluid Diffusion</title>
+        <style>
+            body,
+            html {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                background-color: #000000;
+            }
+            canvas {
+                display: block;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="gridCanvas"></canvas>
+
+        <script>
+            const canvas = document.getElementById('gridCanvas');
+            const ctx = canvas.getContext('2d');
+
+            // --- KONFIGURASI FLUIDA ---
+            const config = {
+                gridSize: 25, // Ukuran piksel kotak (Resolusi grid)
+                gap: 1, // Celah antar kotak
+                decay: 0.94, // Seberapa cepat tinta hilang (0.90 = cepat, 0.99 = awet)
+                spread: 0.3, // Seberapa cepat tinta menyebar ke tetangga
+                mousePower: 300, // Berapa banyak tinta dituang saat mouse lewat
+                baseColor: 220, // Hue dasar (Biru/Cyan)
+                colorShift: 0.5, // Kecepatan perubahan warna
+            };
+
+            let width, height, cols, rows;
+            let mouse = {
+                x: -1000,
+                y: -1000,
+                prevX: -1000,
+                prevY: -1000,
+                down: false,
+            };
+
+            // Kita menggunakan Float32Array untuk performa tinggi
+            // Array ini menyimpan "Intensitas" (seberapa terang) setiap kotak
+            let grid = [];
+            let nextGrid = []; // Buffer untuk kalkulasi frame berikutnya
+
+            function init() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+                cols = Math.ceil(width / config.gridSize);
+                rows = Math.ceil(height / config.gridSize);
+
+                // Inisialisasi Array Grid dengan 0 (Hitam)
+                const size = cols * rows;
+                grid = new Float32Array(size).fill(0);
+                nextGrid = new Float32Array(size).fill(0);
+            }
+
+            // Helper untuk akses index array 1D layaknya 2D
+            function getIdx(x, y) {
+                if (x < 0 || x >= cols || y < 0 || y >= rows) return -1;
+                return x + y * cols;
+            }
+
+            function animate() {
+                // 1. MOUSE INJECTION (Menambahkan Tinta)
+                // Kita gunakan interpolasi antara posisi mouse lama dan baru
+                // agar saat mouse gerak cepat, tintanya nyambung (tidak putus-putus)
+                const distX = mouse.x - mouse.prevX;
+                const distY = mouse.y - mouse.prevY;
+                const steps = Math.ceil(
+                    Math.hypot(distX, distY) / (config.gridSize * 0.5)
+                ); // Jumlah titik interpolasi
+
+                if (steps > 0) {
+                    for (let i = 0; i <= steps; i++) {
+                        const t = i / steps;
+                        const currX = mouse.prevX + distX * t;
+                        const currY = mouse.prevY + distY * t;
+
+                        // Temukan kotak di koordinat ini
+                        const col = Math.floor(currX / config.gridSize);
+                        const row = Math.floor(currY / config.gridSize);
+                        const idx = getIdx(col, row);
+
+                        if (idx !== -1) {
+                            // Tambahkan intensitas ke grid saat ini
+                            // Kita clamp biar gak terlalu silo (max 1000)
+                            grid[idx] = Math.min(
+                                grid[idx] + config.mousePower,
+                                1000
+                            );
+
+                            // Sedikit 'tumpah' ke tetangga biar lebih tebal garisnya
+                            const neighbors = [
+                                getIdx(col + 1, row),
+                                getIdx(col - 1, row),
+                                getIdx(col, row + 1),
+                                getIdx(col, row - 1),
+                            ];
+                            neighbors.forEach((n) => {
+                                if (n !== -1)
+                                    grid[n] = Math.min(
+                                        grid[n] + config.mousePower * 0.5,
+                                        1000
+                                    );
+                            });
+                        }
+                    }
+                }
+
+                mouse.prevX = mouse.x;
+                mouse.prevY = mouse.y;
+
+                // 2. FLUID SIMULATION (Difusi)
+                // Algoritma Cellular Automata sederhana untuk penyebaran panas/tinta
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        const idx = x + y * cols;
+                        const val = grid[idx];
+
+                        if (val < 0.1) {
+                            nextGrid[idx] = 0;
+                            continue;
+                        }
+
+                        // Ambil nilai tetangga
+                        // Kita tambah bias ke atas (y-1) sedikit lebih kecil bobotnya -> efek gravitasi/asap naik?
+                        // Atau bias random. Disini kita pakai difusi rata.
+                        const left = x > 0 ? grid[idx - 1] : 0;
+                        const right = x < cols - 1 ? grid[idx + 1] : 0;
+                        const top = y > 0 ? grid[idx - cols] : 0;
+                        const bottom = y < rows - 1 ? grid[idx + cols] : 0;
+
+                        // Rumus Difusi: Nilai baru adalah rata-rata tetangga + nilai sendiri
+                        // Spread factor menentukan seberapa cepat nyebar
+                        const diffusion =
+                            (val +
+                                (left + right + top + bottom) * config.spread) /
+                            (1 + 4 * config.spread);
+
+                        // Decay: Mengurangi nilai agar perlahan menghilang
+                        nextGrid[idx] = diffusion * config.decay;
+                    }
+                }
+
+                // Swap Buffer (Pindahkan nextGrid ke grid untuk frame selanjutnya)
+                grid.set(nextGrid);
+
+                // 3. RENDERING
+                // Bersihkan layar
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, width, height);
+
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        const idx = x + y * cols;
+                        const val = grid[idx];
+
+                        // Optimasi: Jika nilai sangat kecil, jangan gambar (Hitam)
+                        if (val < 1) continue;
+
+                        // Warna Dinamis berdasarkan intensitas (val)
+                        // Val tinggi (baru digambar) -> Putih/Cyan terang
+                        // Val rendah (sudah lama/menyebar) -> Biru tua/Ungu
+
+                        // Normalisasi val (misal 0 - 255)
+                        const intensity = Math.min(val, 255);
+
+                        // Hue Shift: Semakin redup, warna bergeser dari Cyan (180) ke Ungu (270)
+                        const hue = config.baseColor + (255 - intensity) * 0.4;
+
+                        // Lightness: Semakin terang intensitas, semakin putih (max 90%), semakin redup semakin gelap (min 10%)
+                        const light = Math.max(
+                            10,
+                            Math.min(90, intensity * 0.6)
+                        );
+
+                        ctx.fillStyle = `hsl(${hue}, 100%, ${light}%)`;
+
+                        // Gambar kotak
+                        // Kita gambar sedikit lebih kecil dari grid size (ada gap)
+                        ctx.fillRect(
+                            x * config.gridSize,
+                            y * config.gridSize,
+                            config.gridSize - config.gap,
+                            config.gridSize - config.gap
+                        );
+                    }
+                }
+
+                requestAnimationFrame(animate);
+            }
+
+            // Event Listeners
+            window.addEventListener('mousemove', (e) => {
+                // Jika ini gerakan pertama kali, set prevX/Y biar gak ada garis lurus dari 0,0
+                if (mouse.x === -1000) {
+                    mouse.prevX = e.clientX;
+                    mouse.prevY = e.clientY;
+                }
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
+            });
+
+            window.addEventListener(
+                'touchmove',
+                (e) => {
+                    if (mouse.x === -1000) {
+                        mouse.prevX = e.touches[0].clientX;
+                        mouse.prevY = e.touches[0].clientY;
+                    }
+                    mouse.x = e.touches[0].clientX;
+                    mouse.y = e.touches[0].clientY;
+                },
+                { passive: true }
+            );
+
+            window.addEventListener('resize', init);
+
+            init();
+            animate();
+        </script>
+    </body>
+</html>

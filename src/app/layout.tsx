@@ -18,9 +18,11 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en">
+        <html lang="en" suppressHydrationWarning>
             <body
-                className={`${firaCode.variable} antialiased font-mono bg-[#1e1e1e] text-white overflow-hidden`}>
+                className={`${firaCode.variable} antialiased font-mono bg-[#1e1e1e] text-white overflow-hidden`}
+                suppressHydrationWarning
+            >
                 {children}
             </body>
         </html>
