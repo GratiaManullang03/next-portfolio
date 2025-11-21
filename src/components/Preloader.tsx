@@ -1,85 +1,116 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import gsap from 'gsap';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import DecryptedText from './DecryptedText';
 
-export default function Preloader({ onComplete }: { onComplete: () => void }) {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
+export default function Preloader() {
+    const [isLoading, setIsLoading] = useState(true);
+    const [showText, setShowText] = useState(false);
 
     useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
+        // Start decrypt animation after a short delay
+        const textTimer = setTimeout(() => {
+            setShowText(true);
+        }, 500);
 
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
-        const katakana =
-            'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
-        const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        const nums = '0123456789';
-        const alphabet = katakana + latin + nums;
-
-        const fontSize = 16;
-        const columns = canvas.width / fontSize;
-
-        const rainDrops: number[] = [];
-        for (let x = 0; x < columns; x++) {
-            rainDrops[x] = 1;
-        }
-
-        const draw = () => {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            ctx.fillStyle = '#0F0'; // Green text
-            ctx.font = fontSize + 'px monospace';
-
-            for (let i = 0; i < rainDrops.length; i++) {
-                const text = alphabet.charAt(
-                    Math.floor(Math.random() * alphabet.length)
-                );
-                ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
-
-                if (
-                    rainDrops[i] * fontSize > canvas.height &&
-                    Math.random() > 0.975
-                ) {
-                    rainDrops[i] = 0;
-                }
-                rainDrops[i]++;
-            }
-        };
-
-        const interval = setInterval(draw, 30);
-
-        // End animation after 4 seconds
-        const timer = setTimeout(() => {
-            clearInterval(interval);
-            if (containerRef.current) {
-                gsap.to(containerRef.current, {
-                    opacity: 0,
-                    duration: 1,
-                    onComplete: onComplete,
-                });
-            }
-        }, 4000);
+        // End preloader after animation completes
+        const endTimer = setTimeout(() => {
+            setIsLoading(false);
+        }, 3500);
 
         return () => {
-            clearInterval(interval);
-            clearTimeout(timer);
+            clearTimeout(textTimer);
+            clearTimeout(endTimer);
         };
-    }, [onComplete]);
+    }, []);
 
     return (
-        <div ref={containerRef} className="fixed inset-0 z-50 bg-black">
-            <canvas ref={canvasRef} className="block w-full h-full" />
-            <div className="absolute bottom-10 right-10 text-green-500 font-mono text-xl animate-pulse">
-                SYSTEM BREACH DETECTED...
-            </div>
-        </div>
+        <AnimatePresence>
+            {isLoading && (
+                <motion.div
+                    initial={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.8, ease: 'easeInOut' }}
+                    className="fixed inset-0 z-50 bg-[#020204] flex flex-col items-center justify-center"
+                >
+                    {/* Animated grid background */}
+                    <div className="absolute inset-0 opacity-20">
+                        <div
+                            className="w-full h-full"
+                            style={{
+                                backgroundImage: `
+                                    linear-gradient(rgba(168, 85, 247, 0.1) 1px, transparent 1px),
+                                    linear-gradient(90deg, rgba(168, 85, 247, 0.1) 1px, transparent 1px)
+                                `,
+                                backgroundSize: '50px 50px',
+                            }}
+                        />
+                    </div>
+
+                    {/* Main content */}
+                    <div className="relative z-10 text-center">
+                        {showText && (
+                            <>
+                                {/* GRAXYA title with decrypt effect */}
+                                <div className="mb-8">
+                                    <DecryptedText
+                                        text="GRAXYA"
+                                        speed={80}
+                                        maxIterations={15}
+                                        characters="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%"
+                                        animateOn="view"
+                                        className="text-[#a855f7]"
+                                        encryptedClassName="text-[#06b6d4]"
+                                        parentClassName="text-5xl md:text-7xl font-bold tracking-wider"
+                                    />
+                                </div>
+
+                                {/* Subtitle */}
+                                <div className="mb-12">
+                                    <DecryptedText
+                                        text="INITIALIZING SYSTEM..."
+                                        speed={40}
+                                        maxIterations={20}
+                                        characters="!@#$%^&*()_+-=[]{}|;:,.<>?"
+                                        animateOn="view"
+                                        className="text-[#f472b6]"
+                                        encryptedClassName="text-[#4ade80]"
+                                        parentClassName="text-sm md:text-base font-mono tracking-widest"
+                                    />
+                                </div>
+
+                                {/* Loading bar */}
+                                <div className="w-64 md:w-80 h-1 bg-[#1a1a1a] rounded-full overflow-hidden">
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: '100%' }}
+                                        transition={{
+                                            duration: 2.5,
+                                            ease: 'easeInOut',
+                                        }}
+                                        className="h-full bg-gradient-to-r from-[#06b6d4] via-[#a855f7] to-[#f472b6]"
+                                    />
+                                </div>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Corner decorations */}
+                    <div className="absolute top-4 left-4 text-[#a855f7] font-mono text-xs opacity-50">
+                        [SYS.BOOT]
+                    </div>
+                    <div className="absolute top-4 right-4 text-[#06b6d4] font-mono text-xs opacity-50">
+                        v1.0.0
+                    </div>
+                    <div className="absolute bottom-4 left-4 text-[#f472b6] font-mono text-xs opacity-50">
+                        BACKEND.DEV
+                    </div>
+                    <div className="absolute bottom-4 right-4 text-[#4ade80] font-mono text-xs opacity-50">
+                        STATUS: ONLINE
+                    </div>
+                </motion.div>
+            )}
+        </AnimatePresence>
     );
 }
