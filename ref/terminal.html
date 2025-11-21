@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>GRAXYA Terminal Final Polish</title>
+        <style>
+            /* --- RESET & BASE --- */
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            body {
+                background-color: #050505;
+                font-family: 'Courier New', monospace;
+                min-height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 20px;
+            }
+
+            /* --- TERMINAL CONTAINER --- */
+            .terminal {
+                background-color: #121212;
+                border-radius: 12px;
+                width: 100%;
+                max-width: 950px;
+                box-shadow: 0 40px 80px rgba(0, 0, 0, 0.7);
+                border: 1px solid #222;
+                overflow: hidden;
+                padding-bottom: 35px;
+            }
+
+            /* --- HEADER --- */
+            .terminal-header {
+                background-color: #1a1a1a;
+                padding: 12px;
+                text-align: center;
+                border-bottom: 1px solid #252525;
+                margin-bottom: 45px;
+            }
+            .terminal-title {
+                color: #666;
+                font-size: 12px;
+                font-weight: bold;
+                letter-spacing: 1px;
+            }
+
+            .terminal-body {
+                padding: 0 40px;
+            }
+
+            /* --- ASCII ART --- */
+            .ascii-art {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                margin-bottom: 50px;
+                line-height: 1;
+            }
+            .ascii-pre {
+                margin: 0;
+                font-family: 'Courier New', monospace;
+                font-size: 12px;
+                line-height: 1.1;
+                font-weight: bold;
+            }
+            .char-1 {
+                color: #06b6d4;
+            }
+            .char-2 {
+                color: #3b82f6;
+            }
+            .char-3 {
+                color: #8b5cf6;
+            }
+            .char-4 {
+                color: #a855f7;
+            }
+            .char-5 {
+                color: #d946ef;
+            }
+            .char-6 {
+                color: #f472b6;
+            }
+
+            /* ====== SISTEM PROMPT FINAL ====== */
+
+            .prompt-row {
+                display: flex;
+                align-items: center;
+                width: 100%;
+                height: 34px;
+                position: relative;
+            }
+
+            /* Bracket Fix */
+            .bracket-container {
+                height: 100%;
+                display: flex;
+                align-items: center;
+                padding: 0 6px;
+            }
+            .bracket {
+                color: #555;
+                font-size: 26px;
+                font-weight: lighter;
+                line-height: 1;
+            }
+
+            /* --- GRADIENT BOXES (UPDATED) --- */
+            .grad-box {
+                height: 100%;
+                display: flex;
+                align-items: center;
+                /* PADDING DIPERBESAR: Agar blok gradasi terlihat lebih lebar secara visual */
+                padding: 0 40px;
+                border-radius: 4px;
+                font-size: 13px;
+                font-weight: 600;
+                white-space: nowrap;
+            }
+
+            /* KOTAK KIRI (PATH) - LOGIKA DISAMAKAN DENGAN KANAN */
+            .grad-left {
+                color: #4ade80;
+                margin-right: 2px;
+                justify-content: center; /* Teks di tengah */
+                min-width: 220px; /* Lebar minimum agar seimbang */
+
+                /* Gradasi 90deg (Kiri ke Kanan) dengan ZONA TERANG LEBAR (15%-85%) */
+                background: linear-gradient(
+                    90deg,
+                    #1f1f1f 0%,
+                    #1f1f1f 5%,
+                    #282828 5%,
+                    #282828 10%,
+                    #323232 10%,
+                    #323232 15%,
+                    #3d3d3d 15%,
+                    #3d3d3d 85%,
+                    /* Area terang luas */ #323232 85%,
+                    #323232 90%,
+                    #282828 90%,
+                    #282828 95%,
+                    #1f1f1f 95%,
+                    #1f1f1f 100%
+                );
+            }
+
+            /* KOTAK KANAN (JAM) */
+            .grad-right {
+                color: #7dd3fc;
+                margin-left: 2px;
+                justify-content: center;
+                min-width: 240px; /* Lebar minimum untuk nampung waktu panjang */
+
+                /* Gradasi 270deg (Kanan ke Kiri) dengan ZONA TERANG LEBAR */
+                background: linear-gradient(
+                    270deg,
+                    #1f1f1f 0%,
+                    #1f1f1f 5%,
+                    #282828 5%,
+                    #282828 10%,
+                    #323232 10%,
+                    #323232 15%,
+                    #3d3d3d 15%,
+                    #3d3d3d 85%,
+                    /* Area terang luas */ #323232 85%,
+                    #323232 90%,
+                    #282828 90%,
+                    #282828 95%,
+                    #1f1f1f 95%,
+                    #1f1f1f 100%
+                );
+            }
+
+            /* Dots Separator (Auto-fill) */
+            .dots-fill {
+                flex: 1;
+                height: 100%;
+                margin: 0 10px;
+                opacity: 0.4;
+                background-image: radial-gradient(
+                    circle,
+                    #6b7280 1.5px,
+                    transparent 1.5px
+                );
+                background-size: 12px 100%;
+                background-repeat: repeat-x;
+                background-position: center;
+            }
+
+            /* --- INPUT AREA (UPDATED POSISI PANAH) --- */
+            .input-area {
+                display: flex;
+                align-items: center;
+                /* Padding dikurangi agar panah lebih dekat ke bracket */
+                padding-left: 4px;
+                flex: 1;
+            }
+            .prompt-arrow {
+                color: #a855f7;
+                margin-right: 12px;
+                font-weight: bold;
+                font-size: 18px;
+            }
+            .command-txt {
+                color: #fff;
+                font-size: 14px;
+                letter-spacing: 0.5px;
+                font-weight: 500;
+            }
+            .cursor-blink {
+                display: inline-block;
+                width: 10px;
+                height: 18px;
+                background-color: #a855f7;
+                margin-left: 8px;
+                animation: blink 1s step-end infinite;
+            }
+            @keyframes blink {
+                0%,
+                50% {
+                    opacity: 1;
+                }
+                51%,
+                100% {
+                    opacity: 0;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="terminal">
+            <div class="terminal-header">
+                <div class="terminal-title">graxya@terminal</div>
+            </div>
+
+            <div class="terminal-body">
+                <div class="ascii-art">
+                    <pre class="ascii-pre">
+<span class="char-1">  ██████╗ </span><span class="char-2">██████╗  </span><span class="char-3">█████╗ </span><span class="char-4">██╗  ██╗</span><span class="char-5">██╗   ██╗</span><span class="char-6">█████╗ </span>
+<span class="char-1"> ██╔════╝ </span><span class="char-2">██╔══██╗</span><span class="char-3">██╔══██╗</span><span class="char-4">╚██╗██╔╝</span><span class="char-5">╚██╗ ██╔╝</span><span class="char-6">██╔══██╗</span>
+<span class="char-1"> ██║  ███╗</span><span class="char-2">██████╔╝</span><span class="char-3">███████║</span><span class="char-4"> ╚███╔╝ </span><span class="char-5"> ╚████╔╝ </span><span class="char-6">███████║</span>
+<span class="char-1"> ██║   ██║</span><span class="char-2">██╔══██╗</span><span class="char-3">██╔══██║</span><span class="char-4"> ██╔██╗ </span><span class="char-5">  ╚██╔╝  </span><span class="char-6">██╔══██║</span>
+<span class="char-1"> ╚██████╔╝</span><span class="char-2">██║  ██║</span><span class="char-3">██║  ██║</span><span class="char-4">██╔╝ ██╗</span><span class="char-5">   ██║   </span><span class="char-6">██║  ██║</span>
+<span class="char-1">  ╚═════╝ </span><span class="char-2">╚═╝  ╚═╝</span><span class="char-3">╚═╝  ╚═╝</span><span class="char-4">╚═╝  ╚═╝</span><span class="char-5">   ╚═╝   </span><span class="char-6">╚═╝  ╚═╝</span>
+</pre>
+                </div>
+
+                <div class="prompt-row">
+                    <div class="bracket-container">
+                        <span class="bracket">╭</span>
+                    </div>
+
+                    <div class="grad-box grad-left">~/graxya/portfolio</div>
+
+                    <div class="dots-fill"></div>
+
+                    <div class="grad-box grad-right" id="time-box">
+                        Loading time...
+                    </div>
+
+                    <div class="bracket-container">
+                        <span class="bracket">╮</span>
+                    </div>
+                </div>
+
+                <div class="prompt-row" style="margin-top: -3px">
+                    <div class="bracket-container">
+                        <span class="bracket">╰</span>
+                    </div>
+
+                    <div class="input-area">
+                        <span class="prompt-arrow">❯</span>
+                        <span class="command-txt">npm run dev</span>
+                        <span class="cursor-blink"></span>
+                    </div>
+
+                    <div class="bracket-container">
+                        <span class="bracket">╯</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function updateTime() {
+                const now = new Date();
+                const time = now.toLocaleTimeString('en-US', {
+                    hour12: true,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                });
+                const offset = 'UTC+7';
+                document.getElementById(
+                    'time-box'
+                ).innerText = `${time} ${offset}`;
+            }
+            setInterval(updateTime, 1000);
+            updateTime();
+        </script>
+    </body>
+</html>

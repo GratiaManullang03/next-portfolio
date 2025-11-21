@@ -1,0 +1,15 @@
+@import 'tailwindcss';
+
+@theme {
+    --font-mono: 'Courier New', monospace;
+}
+
+body {
+    background-color: #050505;
+    font-family: var(--font-mono);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
