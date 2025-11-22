@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import TerminalContainer from '@/components/Terminal/TerminalContainer';
 import TerminalHeader from '@/components/Terminal/TerminalHeader';
@@ -10,6 +11,19 @@ import Preloader from '@/components/Preloader';
 import Background from '@/components/Background';
 
 export default function Home() {
+    const [commands, setCommands] = useState<string[]>([]);
+    const scrollRef = useRef<HTMLDivElement>(null);
+
+    const handleCommand = (command: string) => {
+        setCommands(prev => [...prev, command]);
+    };
+
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+    }, [commands]);
+
     return (
         <>
             <Background />
@@ -25,10 +39,19 @@ export default function Home() {
             >
                 <TerminalContainer>
                     <TerminalHeader />
-                    <div className="px-[20px]">
-                        <AsciiArt />
-                        <TerminalOutput />
-                        <Prompt />
+                    <div className="flex flex-col h-[calc(100%-35px)]">
+                        <div className="px-[20px] flex-shrink-0">
+                            <AsciiArt />
+                        </div>
+                        <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-hide px-[20px]">
+                            <TerminalOutput />
+                            {commands.map((cmd, index) => (
+                                <div key={index} className="text-[#6b7280] mb-2 font-mono text-[13px]">
+                                    <span className="text-[#a855f7] mr-[6px] font-bold text-[18px]">❯</span> {cmd}
+                                </div>
+                            ))}
+                            <Prompt onCommand={handleCommand} />
+                        </div>
                     </div>
                 </TerminalContainer>
             </motion.div>

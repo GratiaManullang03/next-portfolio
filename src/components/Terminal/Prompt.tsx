@@ -1,10 +1,16 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
-export default function Prompt() {
+interface PromptProps {
+    onCommand?: (command: string) => void;
+}
+
+export default function Prompt({ onCommand }: PromptProps) {
     const [time, setTime] = useState('');
     const [mounted, setMounted] = useState(false);
+    const [input, setInput] = useState('');
+    const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         setMounted(true);
@@ -24,18 +30,29 @@ export default function Prompt() {
         return () => clearInterval(interval);
     }, []);
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' && input.trim()) {
+            onCommand?.(input.trim());
+            setInput('');
+        }
+    };
+
+    const focusInput = () => {
+        inputRef.current?.focus();
+    };
+
     return (
-        <div className="px-[20px]">
+        <div>
             {/* Row 1 */}
             <div className="flex items-center w-full h-[34px] relative">
                 {/* Bracket Left */}
-                <div className="h-full flex items-center px-[6px]">
-                    <span className="text-[#555] text-[26px] font-light leading-none" suppressHydrationWarning>╭</span>
+                <div className="h-full flex items-center">
+                    <span className="text-[#a855f7] text-[26px] font-light leading-none" suppressHydrationWarning>╭</span>
                 </div>
 
                 {/* Path Box */}
                 <div
-                    className="h-full flex items-center px-[40px] rounded-[4px] text-[13px] font-semibold whitespace-nowrap text-[#4ade80] mr-[2px] justify-center min-w-[220px]"
+                    className="h-full flex items-center px-[40px] rounded-[4px] text-[13px] font-semibold whitespace-nowrap text-[#06b6d4] mr-[2px] justify-center min-w-[220px]"
                     style={{
                         background: 'linear-gradient(90deg, #1f1f1f 0%, #1f1f1f 5%, #282828 5%, #282828 10%, #323232 10%, #323232 15%, #3d3d3d 15%, #3d3d3d 85%, #323232 85%, #323232 90%, #282828 90%, #282828 95%, #1f1f1f 95%, #1f1f1f 100%)'
                     }}
@@ -48,7 +65,7 @@ export default function Prompt() {
 
                 {/* Time Box */}
                 <div
-                    className="h-full flex items-center px-[40px] rounded-[4px] text-[13px] font-semibold whitespace-nowrap text-[#7dd3fc] ml-[2px] justify-center min-w-[240px]"
+                    className="h-full flex items-center px-[40px] rounded-[4px] text-[13px] font-semibold whitespace-nowrap text-[#f472b6] ml-[2px] justify-center min-w-[240px]"
                     style={{
                         background: 'linear-gradient(270deg, #1f1f1f 0%, #1f1f1f 5%, #282828 5%, #282828 10%, #323232 10%, #323232 15%, #3d3d3d 15%, #3d3d3d 85%, #323232 85%, #323232 90%, #282828 90%, #282828 95%, #1f1f1f 95%, #1f1f1f 100%)'
                     }}
@@ -57,32 +74,47 @@ export default function Prompt() {
                 </div>
 
                 {/* Bracket Right */}
-                <div className="h-full flex items-center px-[6px]">
-                    <span className="text-[#555] text-[26px] font-light leading-none" suppressHydrationWarning>╮</span>
+                <div className="h-full flex items-center">
+                    <span className="text-[#a855f7] text-[26px] font-light leading-none" suppressHydrationWarning>╮</span>
                 </div>
             </div>
 
             {/* Row 2 */}
             <div className="flex items-center w-full h-[34px] relative -mt-[3px]">
                 {/* Bracket Left */}
-                <div className="h-full flex items-center px-[6px]">
-                    <span className="text-[#555] text-[26px] font-light leading-none" suppressHydrationWarning>╰</span>
+                <div className="h-full flex items-center">
+                    <span className="text-[#a855f7] text-[26px] font-light leading-none" suppressHydrationWarning>╰</span>
                 </div>
 
                 {/* Input Area */}
-                <div className="flex items-center pl-[4px] flex-1">
-                    <span className="text-[#a855f7] mr-[12px] font-bold text-[18px]">
+                <div className="flex items-center pl-[4px] flex-1 cursor-text" onClick={focusInput}>
+                    <span className="text-[#a855f7] mr-[6px] font-bold text-[18px]">
                         ❯
                     </span>
-                    <span className="text-white text-[14px] tracking-[0.5px] font-medium">
-                        npm run dev
-                    </span>
-                    <span className="inline-block w-[10px] h-[18px] bg-[#a855f7] ml-[8px] animate-blink"></span>
+                    <div className="relative flex-1 h-[18px]">
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            className="bg-transparent border-none outline-none text-[#e5e7eb] text-[13px] font-mono w-full caret-transparent absolute top-0 left-0 h-full"
+                            autoFocus
+                            spellCheck={false}
+                            autoComplete="off"
+                        />
+                        <span
+                            className="absolute top-0 pointer-events-none"
+                            style={{ left: `${input.length * 7.8}px` }}
+                        >
+                            <span className="inline-block w-[10px] h-[18px] bg-[#a855f7] animate-blink"></span>
+                        </span>
+                    </div>
                 </div>
 
                 {/* Bracket Right */}
-                <div className="h-full flex items-center px-[6px]">
-                    <span className="text-[#555] text-[26px] font-light leading-none" suppressHydrationWarning>╯</span>
+                <div className="h-full flex items-center">
+                    <span className="text-[#a855f7] text-[26px] font-light leading-none" suppressHydrationWarning>╯</span>
                 </div>
             </div>
         </div>

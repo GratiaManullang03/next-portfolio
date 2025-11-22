@@ -1,8 +1,8 @@
 export default function TerminalOutput() {
     return (
-        <div className="px-[20px] mb-6 font-mono text-[13px] leading-relaxed">
+        <div className="mb-6 font-mono text-[13px] leading-relaxed">
             <div className="text-[#6b7280] mb-2">
-                <span className="text-[#06b6d4]">$</span> cat about.txt
+                <span className="text-[#a855f7] mr-[6px] font-bold text-[18px]">❯</span> cat about.txt
             </div>
             <div className="text-[#e5e7eb] mb-4">
                 <p className="mb-2">
@@ -28,7 +28,7 @@ export default function TerminalOutput() {
                 </p>
             </div>
             <div className="text-[#6b7280]">
-                <span className="text-[#06b6d4]">$</span> echo &quot;Welcome to my portfolio!&quot;
+                <span className="text-[#a855f7] mr-[6px] font-bold text-[18px]">❯</span> echo &quot;Welcome to my portfolio!&quot;
             </div>
             <div className="text-[#f472b6] mb-4">
                 Welcome to my portfolio!
