@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import CVContent from './contents/CVContent';
 
 interface BrowserProps {
     command: string;
@@ -214,13 +215,17 @@ export default function Browser({ command, onClose }: BrowserProps) {
 
             {/* Content Area */}
             <div className="flex-grow overflow-hidden relative bg-black/20">
-                <div className="flex-grow p-[40px] overflow-y-auto h-full">
-                    <div className="max-w-[800px] mx-auto">
-                        <div className="text-[#e4e4e7] text-[24px] font-semibold mb-[20px]">
-                            {config.content}
+                {config.content === 'curriculum-vitae' ? (
+                    <CVContent />
+                ) : (
+                    <div className="flex-grow p-[40px] overflow-y-auto h-full">
+                        <div className="max-w-[800px] mx-auto">
+                            <div className="text-[#e4e4e7] text-[24px] font-semibold mb-[20px]">
+                                {config.content}
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
             </div>
 
             {/* Status Bar */}
