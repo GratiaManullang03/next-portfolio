@@ -7,15 +7,23 @@ import TerminalHeader from '@/components/Terminal/TerminalHeader';
 import AsciiArt from '@/components/Terminal/AsciiArt';
 import TerminalOutput from '@/components/Terminal/TerminalOutput';
 import Prompt from '@/components/Terminal/Prompt';
+import CommandOutput from '@/components/Terminal/CommandOutput';
 import Preloader from '@/components/Preloader';
 import Background from '@/components/Background';
 
+interface CommandEntry {
+    command: string;
+    id: number;
+}
+
 export default function Home() {
-    const [commands, setCommands] = useState<string[]>([]);
+    const [commands, setCommands] = useState<CommandEntry[]>([]);
     const scrollRef = useRef<HTMLDivElement>(null);
+    const commandIdRef = useRef(0);
 
     const handleCommand = (command: string) => {
-        setCommands(prev => [...prev, command]);
+        commandIdRef.current += 1;
+        setCommands(prev => [...prev, { command, id: commandIdRef.current }]);
     };
 
     useEffect(() => {
@@ -45,9 +53,12 @@ export default function Home() {
                         </div>
                         <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-hide px-[20px]">
                             <TerminalOutput />
-                            {commands.map((cmd, index) => (
-                                <div key={index} className="text-[#6b7280] mb-2 font-mono text-[13px]">
-                                    <span className="text-[#a855f7] mr-[6px] font-bold text-[18px]">❯</span> {cmd}
+                            {commands.map((entry) => (
+                                <div key={entry.id}>
+                                    <div className="text-[#6b7280] mb-2 font-mono text-[13px]">
+                                        <span className="text-[#a855f7] mr-[6px] font-bold text-[18px]">❯</span> {entry.command}
+                                    </div>
+                                    <CommandOutput command={entry.command} />
                                 </div>
                             ))}
                             <Prompt onCommand={handleCommand} />

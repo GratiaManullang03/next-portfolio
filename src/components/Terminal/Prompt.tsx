@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { findMatchingCommands } from '@/constants/commands';
 
 interface PromptProps {
     onCommand?: (command: string) => void;
@@ -10,6 +11,7 @@ export default function Prompt({ onCommand }: PromptProps) {
     const [time, setTime] = useState('');
     const [mounted, setMounted] = useState(false);
     const [input, setInput] = useState('');
+    const [suggestion, setSuggestion] = useState('');
     const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -30,10 +32,28 @@ export default function Prompt({ onCommand }: PromptProps) {
         return () => clearInterval(interval);
     }, []);
 
+    useEffect(() => {
+        if (input) {
+            const matches = findMatchingCommands(input);
+            if (matches.length > 0 && matches[0].name !== input.toLowerCase()) {
+                setSuggestion(matches[0].name);
+            } else {
+                setSuggestion('');
+            }
+        } else {
+            setSuggestion('');
+        }
+    }, [input]);
+
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter' && input.trim()) {
             onCommand?.(input.trim());
             setInput('');
+            setSuggestion('');
+        } else if ((e.key === 'Tab' || e.key === 'ArrowRight') && suggestion) {
+            e.preventDefault();
+            setInput(suggestion);
+            setSuggestion('');
         }
     };
 
@@ -92,6 +112,12 @@ export default function Prompt({ onCommand }: PromptProps) {
                         ❯
                     </span>
                     <div className="relative flex-1 h-[18px]">
+                        {/* Ghost suggestion text */}
+                        {suggestion && (
+                            <span className="absolute top-0 left-0 text-[#6b7280] text-[13px] font-mono pointer-events-none">
+                                {suggestion}
+                            </span>
+                        )}
                         <input
                             ref={inputRef}
                             type="text"
