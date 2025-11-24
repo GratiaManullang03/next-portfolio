@@ -14,11 +14,74 @@ body {
     padding: 20px;
 }
 
+/* =========================================
+   CUSTOM SCROLLBAR (ABSOLUTE CINEMA)
+   ========================================= */
+
+/* 1. Global Scrollbar (Untuk Window Utama) */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+/* Track (Jalur Scrollbar) */
+::-webkit-scrollbar-track {
+    background: #050505; /* Gelap pekat */
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Thumb (Batang Scroll yang digeser) */
+::-webkit-scrollbar-thumb {
+    background: #262626; /* Abu gelap default */
+    border: 2px solid #050505; /* Memberi jarak (padding) visual */
+    border-radius: 99px;
+    transition: all 0.3s ease;
+}
+
+/* Hover Effect: GLOWING NEON */
+::-webkit-scrollbar-thumb:hover {
+    background: #a855f7; /* Ungu Neon */
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.5); /* Efek cahaya */
+    border-color: #050505;
+}
+
+/* Corner (Pertemuan Scroll X dan Y) */
+::-webkit-scrollbar-corner {
+    background: #050505;
+}
+
+/* 2. Utility khusus untuk area konten (Lebih Tipis) */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px; /* Lebih tipis */
+    height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent; /* Transparan biar clean */
+    border: none;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1); /* Sangat samar */
+    border: none;
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #a855f7; /* Tetap ungu saat disentuh */
+}
+
+/* =========================================
+   ANIMATIONS & UTILS
+   ========================================= */
+
 @keyframes blink {
-    0%, 50% {
+    0%,
+    50% {
         opacity: 1;
     }
-    51%, 100% {
+    51%,
+    100% {
         opacity: 0;
     }
 }
@@ -27,6 +90,7 @@ body {
     animation: blink 1s step-end infinite;
 }
 
+/* Utility untuk menyembunyikan scrollbar tapi tetap bisa scroll */
 .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
