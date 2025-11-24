@@ -114,3 +114,16 @@ body {
 	background-size: 200% 200%;
 	animation: border-flow 3s ease infinite;
 }
+
+@keyframes sheen {
+	0% {
+		transform: translateX(-100%) skewX(-15deg);
+	}
+	100% {
+		transform: translateX(200%) skewX(-15deg);
+	}
+}
+
+.group:hover .animate-sheen {
+	animation: sheen 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
