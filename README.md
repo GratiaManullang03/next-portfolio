@@ -52,8 +52,5 @@ src/
 
 ## Commands
 
-Type `help` in the terminal to see available commands.
+Type `/command` in the terminal to see available commands.
 
-## License
-
-MIT
