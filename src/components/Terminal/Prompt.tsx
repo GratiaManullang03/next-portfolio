@@ -16,6 +16,9 @@ export default function Prompt({ onCommand }: PromptProps) {
 
     useEffect(() => {
         setMounted(true);
+        // Focus input on mount
+        inputRef.current?.focus();
+
         const updateTime = () => {
             const now = new Date();
             const timeString = now.toLocaleTimeString('en-US', {
@@ -30,6 +33,16 @@ export default function Prompt({ onCommand }: PromptProps) {
         updateTime();
         const interval = setInterval(updateTime, 1000);
         return () => clearInterval(interval);
+    }, []);
+
+    // Re-focus when clicking anywhere on the page
+    useEffect(() => {
+        const handleGlobalClick = () => {
+            inputRef.current?.focus();
+        };
+
+        window.addEventListener('click', handleGlobalClick);
+        return () => window.removeEventListener('click', handleGlobalClick);
     }, []);
 
     useEffect(() => {
@@ -111,10 +124,10 @@ export default function Prompt({ onCommand }: PromptProps) {
                     <span className="text-[#a855f7] mr-[6px] font-bold text-[18px]">
                         ❯
                     </span>
-                    <div className="relative flex-1 h-[18px]">
+                    <div className="relative flex-1 h-[18px] flex items-center">
                         {/* Ghost suggestion text */}
                         {suggestion && (
-                            <span className="absolute top-0 left-0 text-[#6b7280] text-[13px] font-mono pointer-events-none">
+                            <span className="absolute left-0 text-[#6b7280] text-[13px] font-mono pointer-events-none leading-none">
                                 {suggestion}
                             </span>
                         )}
@@ -124,7 +137,7 @@ export default function Prompt({ onCommand }: PromptProps) {
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={handleKeyDown}
-                            className="bg-transparent border-none outline-none text-[#e5e7eb] text-[13px] font-mono w-full caret-transparent absolute top-0 left-0 h-full"
+                            className="bg-transparent border-none outline-none text-[#e5e7eb] text-[13px] font-mono w-full caret-transparent absolute left-0 h-full leading-none"
                             autoFocus
                             spellCheck={false}
                             autoComplete="off"

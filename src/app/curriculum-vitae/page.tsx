@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 export default function CurriculumVitae() {
     const [isLoading, setIsLoading] = useState(true);
-    const pdfUrl = '/source/CV-Felix-Gratia-Mangatur-Manullang.pdf';
+    const pdfUrl = '/files/CV-Felix-Gratia-Mangatur-Manullang.pdf';
 
     const handleDownload = () => {
         const link = document.createElement('a');

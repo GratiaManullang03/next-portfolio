@@ -5,7 +5,7 @@ import { FiDownload, FiExternalLink } from 'react-icons/fi';
 
 export default function CVContent() {
     const [isLoading, setIsLoading] = useState(true);
-    const pdfUrl = '/source/CV-Felix-Gratia-Mangatur-Manullang.pdf';
+    const pdfUrl = '/files/CV-Felix-Gratia-Mangatur-Manullang.pdf';
 
     const handleDownload = () => {
         const link = document.createElement('a');
