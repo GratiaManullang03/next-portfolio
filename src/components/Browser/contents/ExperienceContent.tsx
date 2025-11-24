@@ -1,22 +1,28 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence, Variants } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
+import {
+	motion,
+	AnimatePresence,
+	Variants,
+	useScroll,
+	useTransform,
+} from "framer-motion";
 import {
 	FiBriefcase,
 	FiUsers,
 	FiCalendar,
 	FiMapPin,
 	FiActivity,
+	FiHash,
 } from "react-icons/fi";
 import {
 	workExperiences,
 	organizationalExperiences,
 	Experience,
 } from "@/data/experience";
-import SpotlightCard from "@/components/ui/SpotlightCard";
-import DecryptedText from "@/components/DecryptedText";
-import TextType from "@/components/ui/TextType";
+import CyberCard from "@/components/ui/CyberCard";
+import ShuffleText from "@/components/ui/ShuffleText";
 
 // --- Variants ---
 const containerVariants: Variants = {
@@ -24,100 +30,128 @@ const containerVariants: Variants = {
 	show: {
 		opacity: 1,
 		transition: {
-			staggerChildren: 0.15,
+			staggerChildren: 0.2,
 		},
 	},
 };
 
 const cardVariants: Variants = {
-	hidden: { opacity: 0, x: -20, scale: 0.95 },
+	hidden: { opacity: 0, x: -30, filter: "blur(10px)" },
 	show: {
 		opacity: 1,
 		x: 0,
-		scale: 1,
-		transition: { type: "spring", stiffness: 50, damping: 15 },
+		filter: "blur(0px)",
+		transition: { type: "spring", stiffness: 40, damping: 15 },
 	},
 };
 
+// --- Data Judul Shuffle ---
+const SHUFFLE_TITLES = [
+	"EXPERIENCE_LOGS",
+	"CAREER_HISTORY",
+	"SYSTEM_ARCHIVES",
+	"DATA_TIMELINE",
+	"TRACK_RECORD",
+];
+
 export default function ExperienceContent() {
 	const [activeTab, setActiveTab] = useState<"work" | "org">("work");
+	const [titleIndex, setTitleIndex] = useState(0);
+
+	const scrollRef = useRef<HTMLDivElement>(null);
+	const contentRef = useRef<HTMLDivElement>(null);
+
+	const { scrollYProgress } = useScroll({
+		container: scrollRef,
+		target: contentRef,
+		offset: ["start start", "end end"],
+	});
+
+	const scaleY = useTransform(scrollYProgress, [0, 1], [0, 1]);
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setTitleIndex((prev) => (prev + 1) % SHUFFLE_TITLES.length);
+		}, 3000);
+		return () => clearInterval(interval);
+	}, []);
 
 	const data =
 		activeTab === "work" ? workExperiences : organizationalExperiences;
 
 	return (
 		<div className="h-full flex flex-col bg-[#050505] text-gray-300 font-mono overflow-hidden relative">
-			{/* Background Grid */}
+			{/* Background */}
 			<div
-				className="absolute inset-0 opacity-[0.05] pointer-events-none"
+				className="absolute inset-0 opacity-[0.03] pointer-events-none"
 				style={{
 					backgroundImage:
-						"linear-gradient(#444 1px, transparent 1px), linear-gradient(90deg, #444 1px, transparent 1px)",
-					backgroundSize: "40px 40px",
-					maskImage:
-						"radial-gradient(circle at center, black, transparent 80%)",
+						"radial-gradient(circle at top left, #a855f7 1px, transparent 1px)",
+					backgroundSize: "30px 30px",
 				}}
 			/>
 
 			{/* Header & Tabs */}
-			<div className="p-6 border-b border-white/10 bg-[#0a0a0c]/90 backdrop-blur-md sticky top-0 z-20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0 shadow-lg shadow-black/50">
-				<div>
-					<div className="flex items-center gap-2 mb-1">
-						<span className="text-[#a855f7] text-2xl">◈</span>
-						{/* TITLE YANG MENGETIK SENDIRI */}
-						<div className="text-xl font-bold text-white tracking-tight flex items-center h-[30px]">
-							<TextType
-								text={[
-									"EXPERIENCE_LOGS",
-									"ACCESSING_ARCHIVES...",
-									"DECRYPTING_HISTORY...",
-									"LOADING_CAREER_DATA...",
-									"EXPERIENCE_LOGS",
-								]}
-								typingSpeed={80}
-								deletingSpeed={40}
-								pauseDuration={2000}
-								loop={true}
-								showCursor={true}
-								cursorCharacter="█"
-								cursorClassName="text-[#a855f7] animate-pulse ml-1"
-							/>
+			<div className="p-6 border-b border-white/10 bg-[#0a0a0c]/95 backdrop-blur-md sticky top-0 z-20 shrink-0 shadow-lg shadow-black/50">
+				<div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-2">
+					<div className="flex items-center gap-3 w-full md:w-auto">
+						<div className="w-10 h-10 rounded-lg bg-[#a855f7]/10 border border-[#a855f7]/30 flex items-center justify-center text-[#a855f7]">
+							<FiHash className="w-5 h-5" />
+						</div>
+						<div className="flex flex-col">
+							<div className="h-[24px] overflow-hidden">
+								<ShuffleText
+									text={SHUFFLE_TITLES[titleIndex]}
+									className="text-xl font-bold text-white tracking-widest"
+									targetClassName="text-white"
+								/>
+							</div>
+							<span className="text-[10px] text-gray-500 font-mono mt-1">
+								// ACCESSING ENCRYPTED RECORDS...
+							</span>
 						</div>
 					</div>
-					<p className="text-xs text-gray-500 mt-1 font-mono pl-8">
-						Chronological data archive of professional & organizational history.
-					</p>
-				</div>
 
-				<div className="flex p-1 bg-white/5 rounded-lg border border-white/10">
-					<button
-						onClick={() => setActiveTab("work")}
-						className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-md transition-all duration-300 ${
-							activeTab === "work"
-								? "bg-[#a855f7] text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]"
-								: "text-gray-500 hover:text-gray-300 hover:bg-white/5"
-						}`}
-					>
-						<FiBriefcase /> CAREER
-					</button>
-					<button
-						onClick={() => setActiveTab("org")}
-						className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-md transition-all duration-300 ${
-							activeTab === "org"
-								? "bg-[#a855f7] text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]"
-								: "text-gray-500 hover:text-gray-300 hover:bg-white/5"
-						}`}
-					>
-						<FiUsers /> ORGANIZATION
-					</button>
+					<div className="flex p-1 bg-black/40 rounded-lg border border-white/10 w-full md:w-auto">
+						<button
+							onClick={() => setActiveTab("work")}
+							className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 text-xs font-bold rounded-md transition-all duration-300 ${
+								activeTab === "work"
+									? "bg-[#a855f7] text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]"
+									: "text-gray-500 hover:text-gray-300 hover:bg-white/5"
+							}`}
+						>
+							<FiBriefcase /> CAREER
+						</button>
+						<button
+							onClick={() => setActiveTab("org")}
+							className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 text-xs font-bold rounded-md transition-all duration-300 ${
+								activeTab === "org"
+									? "bg-[#a855f7] text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]"
+									: "text-gray-500 hover:text-gray-300 hover:bg-white/5"
+							}`}
+						>
+							<FiUsers /> ORG
+						</button>
+					</div>
 				</div>
 			</div>
 
-			{/* Main Content - Timeline Layout */}
-			<div className="flex-1 overflow-y-auto p-6 custom-scrollbar relative">
-				<div className="max-w-4xl mx-auto relative pl-8 md:pl-10 pt-4">
-					{/* Vertical Timeline Line (Neon) */}
-					<div className="absolute left-2 top-0 bottom-0 w-[2px] bg-gradient-to-b from-[#a855f7] via-[#a855f7]/20 to-transparent md:left-0" />
+			{/* Scrollable Content */}
+			<div
+				ref={scrollRef}
+				className="flex-1 overflow-y-auto p-6 custom-scrollbar relative scroll-smooth"
+			>
+				<div
+					ref={contentRef}
+					className="max-w-4xl mx-auto relative pl-8 md:pl-12 pt-4 pb-20"
+				>
+					{/* === DYNAMIC TIMELINE LINE === */}
+					<div className="absolute left-[19px] md:left-[23px] top-0 bottom-0 w-[2px] bg-[#333]" />
+					<motion.div
+						className="absolute left-[19px] md:left-[23px] top-0 w-[2px] bg-gradient-to-b from-[#a855f7] via-[#06b6d4] to-[#a855f7] origin-top shadow-[0_0_10px_#a855f7]"
+						style={{ height: "100%", scaleY: scaleY }}
+					/>
 
 					<AnimatePresence mode="wait">
 						<motion.div
@@ -125,7 +159,7 @@ export default function ExperienceContent() {
 							variants={containerVariants}
 							initial="hidden"
 							animate="show"
-							className="space-y-8 pb-20"
+							className="space-y-10"
 						>
 							{data.map((item, index) => (
 								<TimelineItem key={item.id} item={item} index={index} />
@@ -140,73 +174,63 @@ export default function ExperienceContent() {
 
 function TimelineItem({ item, index }: { item: Experience; index: number }) {
 	return (
-		<motion.div variants={cardVariants} className="relative pl-6 md:pl-8">
-			{/* Timeline Node (Titik Konektor) */}
-			<div className="absolute -left-[7px] md:-left-[9px] top-6 w-4 h-4 rounded-full bg-[#0a0a0c] border-2 border-[#a855f7] shadow-[0_0_10px_rgba(168,85,247,0.8)] z-10 group-hover:scale-125 transition-transform flex items-center justify-center">
-				<div className="w-1.5 h-1.5 rounded-full bg-[#a855f7] animate-pulse"></div>
+		<motion.div variants={cardVariants} className="relative pl-8">
+			{/* Timeline Node */}
+			<div className="absolute -left-[18px] md:-left-[14px] top-8 flex items-center justify-center">
+				<div className="w-5 h-5 rounded-full border border-[#a855f7]/50 bg-[#0a0a0c] flex items-center justify-center z-10 shadow-[0_0_15px_rgba(168,85,247,0.3)] group-hover:scale-125 transition-transform duration-300">
+					<div className="w-2 h-2 rounded-full bg-[#a855f7] group-hover:bg-[#06b6d4] transition-colors" />
+				</div>
+				<div className="absolute left-5 w-8 h-[1px] bg-[#a855f7]/30 group-hover:bg-[#a855f7] transition-colors duration-500" />
 			</div>
 
-			{/* Horizontal Connector */}
-			<div className="absolute left-[8px] top-[29px] w-6 md:w-8 h-[1px] bg-[#a855f7]/50"></div>
-
-			<SpotlightCard
-				className="bg-[#0f0f11] border border-white/10 hover:border-[#a855f7]/50 transition-all duration-300 group relative overflow-hidden"
-				spotlightColor="rgba(168, 85, 247, 0.1)"
-			>
-				{/* Decorative Number Background */}
-				<div className="absolute -right-4 -top-4 text-[80px] font-black text-white/[0.03] pointer-events-none select-none leading-none">
-					{index + 1 < 10 ? `0${index + 1}` : index + 1}
-				</div>
-
-				<div className="p-5 md:p-6 relative z-10">
-					{/* Top Meta */}
-					<div className="flex flex-wrap justify-between items-start gap-4 mb-4">
-						<div className="flex items-center gap-2 px-3 py-1 bg-[#a855f7]/10 border border-[#a855f7]/20 rounded-full text-[#a855f7] text-[10px] font-bold uppercase tracking-wider shadow-[0_0_10px_rgba(168,85,247,0.1)]">
-							<FiCalendar className="w-3 h-3" />
-							{item.period}
+			{/* Card */}
+			<CyberCard className="w-full">
+				<div className="p-6 md:p-7 relative z-10">
+					{/* Header */}
+					<div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-5">
+						<div>
+							<h3 className="text-xl font-bold text-white mb-2 group-hover:text-[#a855f7] transition-colors flex items-center gap-2">
+								{item.role}
+							</h3>
+							<div className="flex items-center gap-2 text-sm font-medium text-gray-400">
+								<span className="w-2 h-2 rounded-sm bg-[#06b6d4] rotate-45"></span>
+								{item.company}
+							</div>
 						</div>
 
-						<div className="flex items-center gap-1 text-xs text-gray-500 font-mono">
-							<FiMapPin className="w-3 h-3 text-[#a855f7]" />
-							{item.location}
-						</div>
-					</div>
-
-					{/* Main Content */}
-					<div className="mb-4">
-						<h3 className="text-lg md:text-xl font-bold text-white mb-1 group-hover:text-[#a855f7] transition-colors flex items-center gap-2">
-							<DecryptedText
-								text={item.role}
-								speed={60}
-								maxIterations={10}
-								className="group-hover:text-[#a855f7] transition-colors"
-							/>
-						</h3>
-						<div className="text-sm text-gray-400 font-medium flex items-center gap-2 mt-1">
-							<span className="w-1.5 h-1.5 rounded-full bg-[#06b6d4] shadow-[0_0_5px_#06b6d4]"></span>
-							{item.company}
+						<div className="flex flex-wrap gap-2">
+							<div className="flex items-center gap-2 px-3 py-1.5 bg-[#a855f7]/5 border border-[#a855f7]/20 rounded text-[#a855f7] text-[11px] font-bold uppercase tracking-wider">
+								<FiCalendar className="w-3 h-3" />
+								{item.period}
+							</div>
+							<div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded text-gray-400 text-[11px]">
+								<FiMapPin className="w-3 h-3" />
+								{item.location}
+							</div>
 						</div>
 					</div>
 
-					{/* Description */}
-					<div className="relative pl-4 border-l-2 border-white/10 group-hover:border-[#a855f7]/50 transition-colors py-1">
-						<p className="text-sm text-gray-400 leading-relaxed font-light">
+					{/* Content */}
+					<div className="relative pl-4 border-l-2 border-white/5 group-hover:border-[#06b6d4]/50 transition-colors duration-500">
+						<p className="text-sm text-gray-400 leading-relaxed font-light group-hover:text-gray-300 transition-colors">
 							{item.description}
 						</p>
 					</div>
 
-					{/* Footer */}
-					<div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center opacity-60 group-hover:opacity-100 transition-opacity">
-						<div className="text-[10px] font-mono text-gray-600 flex items-center gap-1">
-							<FiActivity className="text-[#a855f7]" />
-							LOG_ID: {item.id.toUpperCase()}
+					{/* Footer Clean */}
+					<div className="mt-6 pt-4 border-t border-dashed border-white/10 flex justify-between items-center">
+						<div className="text-[10px] font-mono text-gray-600 flex items-center gap-2 group-hover:text-[#a855f7] transition-colors">
+							<FiActivity />
+							<span>
+								HASH: {Math.random().toString(36).substring(7).toUpperCase()}
+							</span>
 						</div>
-						<div className="text-[10px] font-mono text-[#a855f7] bg-[#a855f7]/5 px-2 py-0.5 rounded">
-							VERIFIED
+						<div className="text-[10px] font-mono text-gray-600 group-hover:text-[#06b6d4] transition-colors">
+							[SECURE_LOG]
 						</div>
 					</div>
 				</div>
-			</SpotlightCard>
+			</CyberCard>
 		</motion.div>
 	);
 }
