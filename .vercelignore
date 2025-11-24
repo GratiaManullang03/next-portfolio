@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+
+# Development files
+.git/
+.github/
+.vscode/
+.idea/
+.claude/
+
+# Test files
+coverage/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+__tests__/
+
+# Documentation
+*.md
+!README.md
+
+# Reference/scratch files
+ref/
+
+# Config files not needed for deployment
+.gitignore
+.gitattributes
+.editorconfig
+.prettierrc*
+.eslintrc*
+eslint.config.*
+tsconfig.tsbuildinfo
+
+# Local env files
+.env.local
+.env.development
+.env.development.local
+
+# Debug logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
