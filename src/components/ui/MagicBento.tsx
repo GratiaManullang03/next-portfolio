@@ -6,12 +6,14 @@ import { Experience } from '@/data/experience';
 
 // --- Constants ---
 const DEFAULT_PARTICLE_COUNT = 8;
-const DEFAULT_SPOTLIGHT_RADIUS = 300;
 const DEFAULT_GLOW_COLOR = '168, 85, 247'; // Purple
-const MOBILE_BREAKPOINT = 768;
 
 // --- Helper Functions ---
-const createParticleElement = (x: number, y: number, color = DEFAULT_GLOW_COLOR) => {
+const createParticleElement = (
+    x: number,
+    y: number,
+    color = DEFAULT_GLOW_COLOR
+) => {
     const el = document.createElement('div');
     el.className = 'particle';
     el.style.cssText = `
@@ -36,10 +38,9 @@ interface ParticleCardProps {
     style?: React.CSSProperties;
     particleCount?: number;
     glowColor?: string;
-    enableTilt?: boolean;
     clickEffect?: boolean;
     enableMagnetism?: boolean;
-    enableStars?: boolean; // <--- FIX: Ditambahkan di sini
+    enableStars?: boolean; // FIX: Sudah ditambahkan
 }
 
 const ParticleCard = ({
@@ -49,10 +50,9 @@ const ParticleCard = ({
     style,
     particleCount = DEFAULT_PARTICLE_COUNT,
     glowColor = DEFAULT_GLOW_COLOR,
-    enableTilt = true,
     clickEffect = false,
     enableMagnetism = false,
-    enableStars = true, // <--- FIX: Default value
+    enableStars = true,
 }: ParticleCardProps) => {
     const cardRef = useRef<HTMLDivElement>(null);
     const particlesRef = useRef<HTMLElement[]>([]);
@@ -88,7 +88,8 @@ const ParticleCard = ({
                 duration: 0.3,
                 ease: 'back.in(1.7)',
                 onComplete: () => {
-                    if (particle.parentNode) particle.parentNode.removeChild(particle);
+                    if (particle.parentNode)
+                        particle.parentNode.removeChild(particle);
                 },
             });
         });
@@ -96,7 +97,6 @@ const ParticleCard = ({
     }, []);
 
     const animateParticles = useCallback(() => {
-        // FIX: Cek enableStars sebelum menjalankan animasi
         if (!enableStars || !cardRef.current || !isHoveredRef.current) return;
 
         if (!particlesInitialized.current) {
@@ -143,7 +143,7 @@ const ParticleCard = ({
 
             timeoutsRef.current.push(timeoutId);
         });
-    }, [initializeParticles, enableStars]); // Tambahkan enableStars ke dependency
+    }, [initializeParticles, enableStars]);
 
     useEffect(() => {
         if (disableAnimations || !cardRef.current) return;
@@ -152,32 +152,14 @@ const ParticleCard = ({
 
         const handleMouseEnter = () => {
             isHoveredRef.current = true;
-            if (enableStars) animateParticles(); // FIX: Cek di sini juga
-
-            if (enableTilt) {
-                gsap.to(element, {
-                    rotateX: 5,
-                    rotateY: 5,
-                    duration: 0.3,
-                    ease: 'power2.out',
-                    transformPerspective: 1000,
-                });
-            }
+            if (enableStars) animateParticles();
         };
 
         const handleMouseLeave = () => {
             isHoveredRef.current = false;
             clearAllParticles();
 
-            if (enableTilt) {
-                gsap.to(element, {
-                    rotateX: 0,
-                    rotateY: 0,
-                    duration: 0.3,
-                    ease: 'power2.out',
-                });
-            }
-
+            // Reset Magnetism
             if (enableMagnetism) {
                 gsap.to(element, {
                     x: 0,
@@ -189,7 +171,7 @@ const ParticleCard = ({
         };
 
         const handleMouseMove = (e: MouseEvent) => {
-            if (!enableTilt && !enableMagnetism) return;
+            if (!enableMagnetism) return;
 
             const rect = element.getBoundingClientRect();
             const x = e.clientX - rect.left;
@@ -197,21 +179,9 @@ const ParticleCard = ({
             const centerX = rect.width / 2;
             const centerY = rect.height / 2;
 
-            if (enableTilt) {
-                const rotateX = ((y - centerY) / centerY) * -5;
-                const rotateY = ((x - centerX) / centerX) * 5;
-
-                gsap.to(element, {
-                    rotateX,
-                    rotateY,
-                    duration: 0.1,
-                    ease: 'power2.out',
-                    transformPerspective: 1000,
-                });
-            }
-
+            // Magnetism Only (No Tilt)
             if (enableMagnetism) {
-                const magnetX = (x - centerX) * 0.05;
+                const magnetX = (x - centerX) * 0.05; // Kekuatan magnet
                 const magnetY = (y - centerY) * 0.05;
 
                 magnetismAnimationRef.current = gsap.to(element, {
@@ -282,18 +252,17 @@ const ParticleCard = ({
         animateParticles,
         clearAllParticles,
         disableAnimations,
-        enableTilt,
         enableMagnetism,
         clickEffect,
         glowColor,
-        enableStars // Tambahkan ke dependency array
+        enableStars,
     ]);
 
     return (
         <div
             ref={cardRef}
             className={`${className} particle-container`}
-            style={{ ...style, position: 'relative', overflow: 'hidden' }}>
+            style={{ ...style, position: 'relative', overflow: 'visible' }}>
             {children}
         </div>
     );
@@ -302,19 +271,19 @@ const ParticleCard = ({
 interface MagicBentoProps {
     items: Experience[];
     enableStars?: boolean;
-    enableTilt?: boolean;
     enableMagnetism?: boolean;
     glowColor?: string;
+    enableTilt?: boolean; // Biarkan prop ini ada tapi tidak dipakai agar tidak error di parent
 }
 
 export default function MagicBento({
     items,
     enableStars = true,
-    enableTilt = true,
     enableMagnetism = true,
-    glowColor = '168, 85, 247'
+    glowColor = '168, 85, 247',
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    enableTilt = false,
 }: MagicBentoProps) {
-    
     return (
         <div className="magic-bento-grid">
             <style jsx global>{`
@@ -334,7 +303,7 @@ export default function MagicBento({
                     .magic-bento-grid {
                         grid-template-columns: repeat(3, 1fr);
                     }
-                    /* Span logic for variety */
+                    /* Layout Variasi */
                     .bento-card:nth-child(1) {
                         grid-column: span 2;
                     }
@@ -357,7 +326,7 @@ export default function MagicBento({
                 .bento-card:hover {
                     border-color: rgba(168, 85, 247, 0.5);
                 }
-                
+
                 .bento-label {
                     font-size: 0.75rem;
                     text-transform: uppercase;
@@ -402,7 +371,7 @@ export default function MagicBento({
                 .bento-meta {
                     margin-top: auto;
                     padding-top: 1rem;
-                    border-top: 1px solid rgba(255,255,255,0.05);
+                    border-top: 1px solid rgba(255, 255, 255, 0.05);
                     display: flex;
                     justify-content: space-between;
                     font-size: 0.75rem;
@@ -416,11 +385,9 @@ export default function MagicBento({
                     key={item.id}
                     className="bento-card"
                     glowColor={glowColor}
-                    enableTilt={enableTilt}
                     enableMagnetism={enableMagnetism}
                     enableStars={enableStars}
-                    clickEffect={true}
-                >
+                    clickEffect={true}>
                     <div>
                         <div className="bento-label">{item.period}</div>
                         <h3 className="bento-title">{item.role}</h3>

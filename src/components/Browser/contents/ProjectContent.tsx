@@ -1,7 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence, Variants } from 'framer-motion';
+import {
+    motion,
+    AnimatePresence,
+    useMotionValue,
+    useSpring,
+    useTransform,
+    Variants,
+} from 'framer-motion';
 import {
     FiGithub,
     FiExternalLink,
@@ -15,6 +22,7 @@ import { projectsData, Project } from '@/data/projects';
 import SpotlightCard from '@/components/ui/SpotlightCard';
 import DecryptedText from '@/components/DecryptedText';
 import { getTechIcon } from '@/utils/techIcons';
+import TextType from '@/components/ui/TextType'; // <--- Import TextType
 
 // --- Variants Animasi ---
 const containerVariants: Variants = {
@@ -65,7 +73,7 @@ export default function ProjectContent() {
             : projectsData.filter((p) => p.featured);
 
     return (
-        <div className="h-full flex flex-col bg-[#050505] text-gray-300 font-mono overflow-hidden relative">
+        <div className="h-full flex flex-col bg-[#050505] text-gray-300 font-mono overflow-hidden relative perspective-1000">
             {/* Background Grid */}
             <div
                 className="absolute inset-0 opacity-[0.05] pointer-events-none"
@@ -81,15 +89,23 @@ export default function ProjectContent() {
             {/* Header & Filter */}
             <div className="p-6 border-b border-white/10 bg-[#0a0a0c]/90 backdrop-blur-md sticky top-0 z-20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0 shadow-lg shadow-black/50">
                 <div>
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2 tracking-tight">
+                    <div className="flex items-center gap-2">
                         <span className="text-[#a855f7] text-2xl">◈</span>
-                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-500">
-                            PROJECT_ARCHIVE
-                        </span>
-                        <span className="text-[10px] bg-[#a855f7]/10 text-[#a855f7] px-2 py-0.5 rounded border border-[#a855f7]/20 animate-pulse">
+                        {/* Ganti ShuffleText dengan TextType */}
+                        <div className="text-xl font-bold text-white tracking-tight flex items-center">
+                            <TextType
+                                text="PROJECT_ARCHIVE"
+                                typingSpeed={100}
+                                loop={false}
+                                showCursor={true}
+                                cursorCharacter="_"
+                                cursorClassName="text-[#a855f7]"
+                            />
+                        </div>
+                        <span className="text-[10px] bg-[#a855f7]/10 text-[#a855f7] px-2 py-0.5 rounded border border-[#a855f7]/20 animate-pulse ml-2">
                             SYS.ONLINE
                         </span>
-                    </h2>
+                    </div>
                     <p className="text-xs text-gray-500 mt-1 font-mono">
                         Loaded {filteredProjects.length} encrypted modules.
                         Ready for inspection.
@@ -323,7 +339,6 @@ export default function ProjectContent() {
     );
 }
 
-// --- PROJECT CARD (Standard Version without 3D Tilt) ---
 function ProjectCard({
     project,
     onClick,
@@ -336,11 +351,9 @@ function ProjectCard({
             variants={itemVariants}
             onClick={onClick}
             className="group relative h-full w-full cursor-pointer">
-            {/* Spotlight Wrapper */}
             <SpotlightCard
                 className="h-full flex flex-col bg-[#0f0f11] border border-white/10 hover:border-[#a855f7]/50 transition-colors duration-500 shadow-2xl relative z-10"
                 spotlightColor="rgba(168, 85, 247, 0.15)">
-                {/* Image Area */}
                 <div className="h-48 w-full bg-[#1a1a1a] relative overflow-hidden border-b border-white/5 group-hover:h-44 transition-all duration-500">
                     {project.thumbnail ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -355,7 +368,6 @@ function ProjectCard({
                         </div>
                     )}
 
-                    {/* Glitch Scanline */}
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#a855f7]/20 to-transparent opacity-0 group-hover:opacity-100 translate-y-[-100%] group-hover:translate-y-[100%] transition-all duration-1000 pointer-events-none z-20" />
 
                     <div className="absolute top-3 right-3 bg-black/90 backdrop-blur text-[10px] font-bold px-2 py-1 rounded border border-white/10 text-gray-400 group-hover:text-[#a855f7] group-hover:border-[#a855f7]/50 transition-colors z-30">
@@ -363,9 +375,7 @@ function ProjectCard({
                     </div>
                 </div>
 
-                {/* Card Body */}
                 <div className="p-5 flex flex-col flex-grow relative">
-                    {/* Holographic Shine Effect (Subtle) */}
                     <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
                     <div className="mb-auto relative z-10">
@@ -382,7 +392,6 @@ function ProjectCard({
                         </p>
                     </div>
 
-                    {/* Tech Icons Row */}
                     <div className="flex items-center gap-2 mt-3 relative z-10">
                         {project.technologies.slice(0, 5).map((tech, i) => {
                             const iconPath = getTechIcon(tech);
@@ -402,7 +411,6 @@ function ProjectCard({
                                             </span>
                                         )}
                                     </div>
-                                    {/* Tooltip */}
                                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black border border-white/20 text-[10px] text-white rounded opacity-0 group-hover/icon:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
                                         {tech}
                                     </div>
