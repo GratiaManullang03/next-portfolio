@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import CVContent from './contents/CVContent';
-import ProjectContent from './contents/ProjectContent'; // Import ProjectContent
+import ProjectContent from './contents/ProjectContent';
+import ExperienceContent from './contents/ExperienceContent'; // <--- Import Baru
 
 interface BrowserProps {
     command: string;
@@ -30,7 +31,8 @@ const BROWSER_CONFIGS: Record<string, BrowserConfig> = {
         content: 'project',
     },
     '/experience': {
-        tabName: 'Experience',
+        // <--- Config Experience
+        tabName: 'Experience Logs',
         tabIcon: '💼',
         url: 'https://graxya.dev/experience',
         content: 'experience',
@@ -94,7 +96,6 @@ export default function Browser({ command, onClose }: BrowserProps) {
         setIsMaximized(!isMaximized);
     };
 
-    // Drag handlers
     const handleMouseDown = (e: React.MouseEvent) => {
         if (isMaximized) return;
         if ((e.target as HTMLElement).closest('button')) return;
@@ -145,13 +146,14 @@ export default function Browser({ command, onClose }: BrowserProps) {
         };
     }, [isDragging, handleMouseMove, handleMouseUp]);
 
-    // Content Renderer Helper
     const renderContent = () => {
         switch (config.content) {
             case 'curriculum-vitae':
                 return <CVContent />;
             case 'project':
                 return <ProjectContent />;
+            case 'experience': // <--- Case Baru
+                return <ExperienceContent />;
             default:
                 return (
                     <div className="flex-grow p-[40px] overflow-y-auto h-full">
@@ -192,16 +194,13 @@ export default function Browser({ command, onClose }: BrowserProps) {
                     : `translate(${position.x}px, ${position.y}px)`,
                 transitionDuration: isDragging ? '0ms' : '300ms',
             }}>
-            {/* Header Bar */}
             <div
                 className={`h-[44px] bg-black/30 border-b border-white/[0.08] flex items-end px-[10px] select-none ${
                     !isMaximized ? 'cursor-grab active:cursor-grabbing' : ''
                 }`}
                 onMouseDown={handleMouseDown}>
-                {/* Tab */}
                 <div className="flex-grow flex h-full pt-[8px]">
                     <div className="w-[220px] h-full bg-[#0a0a0c]/95 text-[#e4e4e7] rounded-t-md border border-white/[0.08] border-b-0 flex items-center px-[15px] text-[12px] font-medium relative group">
-                        {/* Gradient top border */}
                         <div className="absolute top-[-1px] left-0 w-full h-[2px] bg-gradient-to-r from-[#a855f7] to-[#f472b6]" />
                         <span className="mr-[10px] opacity-80 group-hover:opacity-100 transition-opacity">
                             {config.tabIcon}
@@ -210,15 +209,12 @@ export default function Browser({ command, onClose }: BrowserProps) {
                     </div>
                 </div>
 
-                {/* Window Controls */}
                 <div className="flex h-full items-center pl-[10px] gap-[8px]">
-                    {/* Maximize Button */}
                     <button
                         onClick={handleMaximize}
                         className="w-[32px] h-[32px] flex items-center justify-center text-[#71717a] rounded hover:bg-white/10 hover:text-white transition-colors"
                         title={isMaximized ? 'Restore' : 'Maximize'}>
                         {isMaximized ? (
-                            // Restore icon
                             <svg
                                 width="12"
                                 height="12"
@@ -235,7 +231,6 @@ export default function Browser({ command, onClose }: BrowserProps) {
                                 <path d="M3.5 1.5H10.5V8.5" strokeWidth="1.5" />
                             </svg>
                         ) : (
-                            // Maximize icon
                             <svg
                                 width="12"
                                 height="12"
@@ -253,7 +248,6 @@ export default function Browser({ command, onClose }: BrowserProps) {
                         )}
                     </button>
 
-                    {/* Close Button */}
                     <button
                         onClick={handleClose}
                         className="w-[32px] h-[32px] flex items-center justify-center text-[#71717a] rounded hover:bg-[#ef4444] hover:text-white transition-colors"
@@ -274,28 +268,23 @@ export default function Browser({ command, onClose }: BrowserProps) {
                 </div>
             </div>
 
-            {/* Navigation Bar */}
             <div className="h-[50px] flex items-center px-[16px] gap-[16px] bg-white/[0.01] border-b border-white/[0.08]">
-                {/* Nav Actions (disabled) */}
                 <div className="flex gap-[12px] text-[#71717a] opacity-50 cursor-not-allowed">
                     <span>←</span>
                     <span>→</span>
                     <span>↻</span>
                 </div>
 
-                {/* URL Bar */}
                 <div className="flex-grow h-[32px] bg-black/40 border border-white/[0.04] rounded flex items-center px-[12px] font-mono text-[13px] text-[#71717a] select-none">
                     <span className="opacity-60 mr-[8px]">🔒</span>
                     <span className="text-[#555]">{config.url}</span>
                 </div>
             </div>
 
-            {/* Content Area */}
             <div className="flex-grow overflow-hidden relative bg-[#050505]">
                 {renderContent()}
             </div>
 
-            {/* Status Bar */}
             <div className="h-[28px] bg-black/50 border-t border-white/[0.05] flex items-center justify-end px-[15px] gap-[20px] font-mono text-[10px] text-[#71717a] select-none">
                 <div className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
