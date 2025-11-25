@@ -6,7 +6,6 @@ import {
 	FiGithub,
 	FiExternalLink,
 	FiCpu,
-	FiArrowLeft,
 	FiLayers,
 	FiActivity,
 	FiCode,
@@ -17,14 +16,11 @@ import DecryptedText from "@/components/DecryptedText";
 import { getTechIcon } from "@/utils/techIcons";
 import TextType from "@/components/ui/TextType";
 
-// --- Variants Animasi ---
 const containerVariants: Variants = {
 	hidden: { opacity: 0 },
 	show: {
 		opacity: 1,
-		transition: {
-			staggerChildren: 0.1,
-		},
+		transition: { staggerChildren: 0.1 },
 	},
 };
 
@@ -62,61 +58,55 @@ export default function ProjectContent() {
 		filter === "all" ? projectsData : projectsData.filter((p) => p.featured);
 
 	return (
-		<div className="h-full flex flex-col bg-[#050505] text-gray-300 font-mono overflow-hidden relative perspective-1000">
-			{/* Background Grid */}
-			<div
-				className="absolute inset-0 opacity-[0.05] pointer-events-none"
-				style={{
-					backgroundImage:
-						"linear-gradient(#444 1px, transparent 1px), linear-gradient(90deg, #444 1px, transparent 1px)",
-					backgroundSize: "40px 40px",
-					maskImage:
-						"radial-gradient(circle at center, black, transparent 80%)",
-				}}
-			/>
+		<div className="h-full flex flex-col bg-[#030303] text-gray-300 font-mono overflow-hidden relative perspective-1000">
+			{/* --- CINEMATIC AMBIENCE --- */}
+			<div className="absolute inset-0 opacity-[0.03] pointer-events-none z-50 mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+			<div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+				<div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-900/5 blur-[120px]" />
+			</div>
 
-			{/* Header & Filter */}
-			<div className="h-[56px] px-6 py-2 border-b border-white/10 bg-[#0a0a0c]/90 backdrop-blur-md sticky top-0 z-20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0 shadow-lg shadow-black/50">
-				<div>
-					<div className="flex items-center gap-2">
-						<span className="text-[#a855f7] text-2xl">◈</span>
-						{/* UPDATE: Title yang berganti-ganti (Looping) */}
-						<div className="text-xl font-bold text-white tracking-tight flex items-center h-[30px]">
-							<TextType
-								text={[
-									"PROJECT_ARCHIVE",
-									"LOADING_SECRET_CODES...",
-									"BREWING_COFFEE...",
-									"DECRYPTING_IDEAS...",
-									"ERROR_404_JUST_KIDDING",
-									"COMPILING_AWESOMENESS...",
-									"PROJECT_ARCHIVE", // Kembali ke awal
-								]}
-								typingSpeed={80}
-								deletingSpeed={40}
-								pauseDuration={2000}
-								loop={true}
-								showCursor={true}
-								cursorCharacter="█"
-								cursorClassName="text-[#a855f7] animate-pulse ml-1"
-							/>
-						</div>
-						<span className="text-[10px] bg-[#a855f7]/10 text-[#a855f7] px-2 py-0.5 rounded border border-[#a855f7]/20 animate-pulse ml-2 hidden sm:inline-block">
-							SYS.ONLINE
+			{/* --- HEADER SECTION (Sandwich Layout) --- */}
+			<div className="shrink-0 px-6 md:px-10 py-5 border-b border-white/5 bg-[#030303]/90 backdrop-blur-md sticky top-0 z-20 shadow-2xl flex flex-col md:flex-row justify-between items-end gap-6 relative">
+				<div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-50" />
+
+				<div className="flex-1">
+					<div className="flex items-center gap-2 mb-1">
+						<FiCpu className="text-purple-500 w-3 h-3" />
+						<span className="text-[10px] font-mono tracking-[0.2em] text-purple-400/80 uppercase">
+							// PROJECT_ARCHIVE
 						</span>
 					</div>
-					<p className="text-xs text-gray-500 mt-1 font-mono">
-						Loaded {filteredProjects.length} encrypted modules. Don&apos;t break
-						anything.
+
+					{/* SCALE UP TITLE */}
+					<div className="text-2xl md:text-3xl font-black text-white tracking-tight flex items-center">
+						<TextType
+							text={[
+								"PROJECT_ARCHIVE",
+								"CREATIVE_LABS",
+								"BUILDING_IDEAS",
+								"DEPLOYING_NOW...",
+							]}
+							typingSpeed={80}
+							deletingSpeed={40}
+							pauseDuration={2000}
+							loop={true}
+							showCursor={true}
+							cursorCharacter="█"
+							cursorClassName="text-purple-500 animate-pulse ml-2"
+						/>
+					</div>
+
+					<p className="text-[10px] text-purple-400/80 font-mono tracking-[0.3em] uppercase mt-1 animate-pulse">
+						LOADED {filteredProjects.length} ENCRYPTED MODULES...
 					</p>
 				</div>
 
 				<div className="flex gap-1 bg-black/60 p-1.5 rounded-lg border border-white/10 shadow-inner">
 					<button
 						onClick={() => setFilter("featured")}
-						className={`px-4 py-1.5 text-[11px] font-bold rounded transition-all duration-300 ${
+						className={`px-4 py-2 text-[10px] font-bold tracking-wider rounded transition-all duration-300 ${
 							filter === "featured"
-								? "bg-[#a855f7] text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]"
+								? "bg-purple-600 text-white shadow-lg shadow-purple-900/20"
 								: "text-gray-500 hover:text-gray-300 hover:bg-white/5"
 						}`}
 					>
@@ -124,9 +114,9 @@ export default function ProjectContent() {
 					</button>
 					<button
 						onClick={() => setFilter("all")}
-						className={`px-4 py-1.5 text-[11px] font-bold rounded transition-all duration-300 ${
+						className={`px-4 py-2 text-[10px] font-bold tracking-wider rounded transition-all duration-300 ${
 							filter === "all"
-								? "bg-[#a855f7] text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]"
+								? "bg-purple-600 text-white shadow-lg shadow-purple-900/20"
 								: "text-gray-500 hover:text-gray-300 hover:bg-white/5"
 						}`}
 					>
@@ -136,7 +126,7 @@ export default function ProjectContent() {
 			</div>
 
 			{/* Main Grid Content */}
-			<div className="flex-1 overflow-y-auto p-8 custom-scrollbar relative">
+			<div className="flex-1 overflow-y-auto p-8 custom-scrollbar relative z-10">
 				<motion.div
 					key={filter}
 					variants={containerVariants}
@@ -169,10 +159,9 @@ export default function ProjectContent() {
 							initial="hidden"
 							animate="visible"
 							exit="exit"
-							className="w-full max-w-5xl h-[85vh] bg-[#0a0a0c] border border-[#a855f7]/30 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col relative"
+							className="w-full max-w-5xl h-[85vh] bg-[#0a0a0c] border border-purple-500/30 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col relative"
 							onClick={(e) => e.stopPropagation()}
 						>
-							{/* Close Button */}
 							<button
 								onClick={() => setSelectedProject(null)}
 								className="absolute top-4 right-4 z-20 p-2 bg-black/50 text-white rounded-full hover:bg-red-500/20 hover:text-red-500 transition-colors border border-white/10"
@@ -189,7 +178,6 @@ export default function ProjectContent() {
 								</svg>
 							</button>
 
-							{/* Cinematic Header */}
 							<div className="h-[40%] w-full relative shrink-0 overflow-hidden group">
 								{selectedProject.thumbnail ? (
 									// eslint-disable-next-line @next/next/no-img-element
@@ -200,15 +188,14 @@ export default function ProjectContent() {
 									/>
 								) : (
 									<div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#1a1a1a] to-black">
-										<FiCpu className="w-24 h-24 text-[#a855f7]/20" />
+										<FiCpu className="w-24 h-24 text-purple-500/20" />
 									</div>
 								)}
-								{/* Gradient Overlay */}
 								<div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-[#0a0a0c]/40 to-transparent" />
 
 								<div className="absolute bottom-6 left-6 right-6">
 									<div className="flex items-center gap-3 mb-3">
-										<span className="px-3 py-1 text-[10px] font-bold bg-[#a855f7] text-white rounded shadow-lg shadow-purple-500/30">
+										<span className="px-3 py-1 text-[10px] font-bold bg-purple-600 text-white rounded shadow-lg shadow-purple-500/30">
 											{selectedProject.type}
 										</span>
 										{selectedProject.featured && (
@@ -223,13 +210,11 @@ export default function ProjectContent() {
 								</div>
 							</div>
 
-							{/* Detail Body */}
 							<div className="flex-1 overflow-y-auto custom-scrollbar bg-[#0a0a0c]">
 								<div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-									{/* Left Column */}
 									<div className="md:col-span-2 space-y-6">
 										<div>
-											<h3 className="text-[#a855f7] text-sm font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
+											<h3 className="text-purple-500 text-sm font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
 												<FiCode /> Mission Brief
 											</h3>
 											<p className="text-gray-300 leading-relaxed text-lg font-light">
@@ -237,9 +222,8 @@ export default function ProjectContent() {
 											</p>
 										</div>
 
-										{/* Tech Stack Grid */}
 										<div>
-											<h3 className="text-[#a855f7] text-sm font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+											<h3 className="text-purple-500 text-sm font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
 												<FiLayers /> Tech Arsenal
 											</h3>
 											<div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -248,7 +232,7 @@ export default function ProjectContent() {
 													return (
 														<div
 															key={i}
-															className="flex items-center gap-3 p-3 bg-[#161618] rounded border border-white/5 hover:border-[#a855f7]/30 transition-colors group/tech"
+															className="flex items-center gap-3 p-3 bg-[#161618] rounded border border-white/5 hover:border-purple-500/30 transition-colors group/tech"
 														>
 															{iconPath ? (
 																// eslint-disable-next-line @next/next/no-img-element
@@ -270,7 +254,6 @@ export default function ProjectContent() {
 										</div>
 									</div>
 
-									{/* Right Column */}
 									<div className="space-y-6">
 										<div className="p-5 bg-[#111] rounded-xl border border-white/10 space-y-4">
 											<h4 className="text-white font-bold text-sm">
@@ -282,7 +265,7 @@ export default function ProjectContent() {
 													href={selectedProject.liveUrl}
 													target="_blank"
 													rel="noopener noreferrer"
-													className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-gradient-to-r from-[#a855f7] to-[#7c3aed] text-white rounded-lg hover:opacity-90 transition-all font-bold text-sm shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 hover:-translate-y-0.5"
+													className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:opacity-90 transition-all font-bold text-sm shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 hover:-translate-y-0.5"
 												>
 													<FiExternalLink className="w-4 h-4" />
 													Launch System
@@ -347,12 +330,10 @@ function ProjectCard({
 			onClick={onClick}
 			className="group relative h-full w-full cursor-pointer"
 		>
-			{/* Spotlight Wrapper */}
 			<SpotlightCard
-				className="h-full flex flex-col bg-[#0f0f11] border border-white/10 hover:border-[#a855f7]/50 transition-colors duration-500 shadow-2xl relative z-10"
+				className="h-full flex flex-col bg-[#0f0f11] border border-white/10 hover:border-purple-500/50 transition-colors duration-500 shadow-2xl relative z-10"
 				spotlightColor="rgba(168, 85, 247, 0.15)"
 			>
-				{/* Image Area */}
 				<div className="h-48 w-full bg-[#1a1a1a] relative overflow-hidden border-b border-white/5 group-hover:h-44 transition-all duration-500">
 					{project.thumbnail ? (
 						// eslint-disable-next-line @next/next/no-img-element
@@ -363,30 +344,25 @@ function ProjectCard({
 						/>
 					) : (
 						<div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
-							<FiCpu className="w-12 h-12 text-gray-700 group-hover:text-[#a855f7] transition-colors" />
+							<FiCpu className="w-12 h-12 text-gray-700 group-hover:text-purple-500 transition-colors" />
 						</div>
 					)}
-
-					{/* Glitch Scanline */}
-					<div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#a855f7]/20 to-transparent opacity-0 group-hover:opacity-100 translate-y-[-100%] group-hover:translate-y-[100%] transition-all duration-1000 pointer-events-none z-20" />
-
-					<div className="absolute top-3 right-3 bg-black/90 backdrop-blur text-[10px] font-bold px-2 py-1 rounded border border-white/10 text-gray-400 group-hover:text-[#a855f7] group-hover:border-[#a855f7]/50 transition-colors z-30">
+					<div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-500/20 to-transparent opacity-0 group-hover:opacity-100 translate-y-[-100%] group-hover:translate-y-[100%] transition-all duration-1000 pointer-events-none z-20" />
+					<div className="absolute top-3 right-3 bg-black/90 backdrop-blur text-[10px] font-bold px-2 py-1 rounded border border-white/10 text-gray-400 group-hover:text-purple-500 group-hover:border-purple-500/50 transition-colors z-30">
 						{project.type}
 					</div>
 				</div>
 
-				{/* Card Body */}
 				<div className="p-5 flex flex-col flex-grow relative">
-					{/* Holographic Shine Effect (Subtle) */}
 					<div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
 					<div className="mb-auto relative z-10">
-						<h3 className="text-white font-bold text-lg mb-2 group-hover:text-[#a855f7] transition-colors flex items-center gap-2">
+						<h3 className="text-white font-bold text-lg mb-2 group-hover:text-purple-500 transition-colors flex items-center gap-2">
 							<DecryptedText
 								text={project.title}
 								speed={80}
 								maxIterations={10}
-								className="group-hover:text-[#a855f7] transition-colors"
+								className="group-hover:text-purple-500 transition-colors"
 							/>
 						</h3>
 						<p className="text-gray-500 text-xs leading-relaxed mb-4 line-clamp-2 group-hover:text-gray-400 transition-colors">
@@ -394,13 +370,12 @@ function ProjectCard({
 						</p>
 					</div>
 
-					{/* Tech Icons Row */}
 					<div className="flex items-center gap-2 mt-3 relative z-10">
 						{project.technologies.slice(0, 5).map((tech, i) => {
 							const iconPath = getTechIcon(tech);
 							return (
 								<div key={i} className="relative group/icon">
-									<div className="w-6 h-6 rounded bg-white/5 p-1 border border-white/5 flex items-center justify-center group-hover/icon:border-[#a855f7]/50 group-hover/icon:bg-[#a855f7]/10 transition-all">
+									<div className="w-6 h-6 rounded bg-white/5 p-1 border border-white/5 flex items-center justify-center group-hover/icon:border-purple-500/50 group-hover/icon:bg-purple-500/10 transition-all">
 										{iconPath ? (
 											// eslint-disable-next-line @next/next/no-img-element
 											<img
@@ -413,9 +388,6 @@ function ProjectCard({
 												{tech.substring(0, 1)}
 											</span>
 										)}
-									</div>
-									<div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black border border-white/20 text-[10px] text-white rounded opacity-0 group-hover/icon:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
-										{tech}
 									</div>
 								</div>
 							);

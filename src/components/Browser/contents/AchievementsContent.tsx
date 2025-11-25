@@ -73,11 +73,11 @@ const CyberScramble = () => {
 
 	return (
 		<div className="relative inline-block">
-			<h1 className="text-4xl md:text-5xl font-black text-white tracking-tight uppercase font-mono">
+			<h1 className="text-2xl md:text-3xl font-black text-white tracking-tight uppercase font-mono">
 				{displayText}
 				<span className="animate-pulse text-emerald-500">_</span>
 			</h1>
-			<p className="text-[10px] text-emerald-500/60 font-mono tracking-[0.3em] uppercase mt-1">
+			<p className="text-[10px] text-emerald-400/80 font-mono tracking-[0.3em] uppercase mt-1">
 				{isScrambling ? "DECRYPTING_SECURE_DATA..." : "ACCESS_GRANTED"}
 			</p>
 		</div>
@@ -129,9 +129,9 @@ export default function AchievementsContent() {
 				<div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent opacity-50" />
 
 				<div>
-					<div className="flex items-center gap-2 mb-2">
+					<div className="flex items-center gap-2 mb-1">
 						<FiCpu className="text-emerald-500 animate-spin-slow" />
-						<span className="text-[10px] font-mono tracking-[0.2em] text-gray-500 uppercase">
+						<span className="text-[10px] font-mono tracking-[0.2em] text-emerald-400/80 uppercase">
 							SystemV.2.0 // Secured
 						</span>
 					</div>
