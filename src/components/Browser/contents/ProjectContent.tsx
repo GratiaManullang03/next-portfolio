@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import {
 	FiGithub,
@@ -50,9 +50,25 @@ const detailVariants: Variants = {
 	},
 };
 
+const PROJECT_SUBTITLES = [
+	"LOADED {count} ENCRYPTED MODULES...",
+	"BUGS_FIXED // FEATURES_SHIPPED",
+	"PROUDLY_BUILT_WITH_COFFEE",
+	"DEPLOYING_TO_PRODUCTION...",
+	"CTRL_Z_IS_MY_BEST_FRIEND",
+];
+
 export default function ProjectContent() {
 	const [filter, setFilter] = useState<"all" | "featured">("featured");
 	const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+	const [subtitleIndex, setSubtitleIndex] = useState(0);
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setSubtitleIndex((prev) => (prev + 1) % PROJECT_SUBTITLES.length);
+		}, 3000);
+		return () => clearInterval(interval);
+	}, []);
 
 	const filteredProjects =
 		filter === "all" ? projectsData : projectsData.filter((p) => p.featured);
@@ -97,7 +113,10 @@ export default function ProjectContent() {
 					</div>
 
 					<p className="text-[10px] text-purple-400/80 font-mono tracking-[0.3em] uppercase mt-1 animate-pulse">
-						LOADED {filteredProjects.length} ENCRYPTED MODULES...
+						{PROJECT_SUBTITLES[subtitleIndex].replace(
+							"{count}",
+							filteredProjects.length.toString()
+						)}
 					</p>
 				</div>
 

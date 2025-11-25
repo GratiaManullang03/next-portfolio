@@ -1,12 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FiDownload, FiExternalLink, FiFileText } from "react-icons/fi";
 import SplitText from "@/components/ui/SplitText";
 
+const CV_SUBTITLES = [
+	"RESUME_DATA // READ_ONLY_MODE",
+	"DEFINITELY_NOT_OUTDATED...",
+	"HIRE_ME_MAYBE?",
+	"PDF_LOADED_SUCCESSFULLY",
+	"SKILLS_++ // EXPERIENCE_++",
+];
+
 export default function CVContent() {
 	const [isLoading, setIsLoading] = useState(true);
+	const [subtitleIndex, setSubtitleIndex] = useState(0);
 	const pdfUrl = "/files/CV-Felix-Gratia-Mangatur-Manullang.pdf";
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setSubtitleIndex((prev) => (prev + 1) % CV_SUBTITLES.length);
+		}, 3000);
+		return () => clearInterval(interval);
+	}, []);
 
 	const handleDownload = () => {
 		const link = document.createElement("a");
@@ -44,7 +60,7 @@ export default function CVContent() {
 					/>
 
 					<p className="text-[10px] text-white/70 font-mono tracking-[0.3em] uppercase mt-1 animate-pulse">
-						RESUME_DATA // READ_ONLY_MODE
+						{CV_SUBTITLES[subtitleIndex]}
 					</p>
 				</div>
 

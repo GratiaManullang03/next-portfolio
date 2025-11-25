@@ -51,9 +51,18 @@ const SPLIT_TITLES = [
 	"TRACK_RECORD",
 ];
 
+const EXPERIENCE_SUBTITLES = [
+	"ACCESSING_ENCRYPTED_RECORDS...",
+	"YES_I_ACTUALLY_DID_THIS",
+	"TRUST_ME_BRO",
+	"EXPERIENCE_POINTS_+999",
+	"LOADING_CAREER_ACHIEVEMENTS...",
+];
+
 export default function ExperienceContent() {
 	const [activeTab, setActiveTab] = useState<"work" | "org">("work");
 	const [titleIndex, setTitleIndex] = useState(0);
+	const [subtitleIndex, setSubtitleIndex] = useState(0);
 
 	const scrollRef = useRef<HTMLDivElement>(null);
 	const contentRef = useRef<HTMLDivElement>(null);
@@ -69,6 +78,13 @@ export default function ExperienceContent() {
 	useEffect(() => {
 		const interval = setInterval(() => {
 			setTitleIndex((prev) => (prev + 1) % SPLIT_TITLES.length);
+		}, 3000);
+		return () => clearInterval(interval);
+	}, []);
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setSubtitleIndex((prev) => (prev + 1) % EXPERIENCE_SUBTITLES.length);
 		}, 3000);
 		return () => clearInterval(interval);
 	}, []);
@@ -104,7 +120,7 @@ export default function ExperienceContent() {
 					/>
 
 					<p className="text-[10px] text-cyan-400/80 font-mono tracking-[0.3em] uppercase mt-1 animate-pulse">
-						ACCESSING_ENCRYPTED_RECORDS...
+						{EXPERIENCE_SUBTITLES[subtitleIndex]}
 					</p>
 				</div>
 
