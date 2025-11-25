@@ -196,13 +196,13 @@ export default function Browser({ command, onClose }: BrowserProps) {
 			}}
 		>
 			<div
-				className={`h-[44px] bg-black/30 border-b border-white/[0.08] flex items-end px-[10px] select-none ${
+				className={`h-[48px] bg-black/30 border-b border-white/[0.08] flex items-end px-[10px] select-none ${
 					!isMaximized ? "cursor-grab active:cursor-grabbing" : ""
 				}`}
 				onMouseDown={handleMouseDown}
 			>
-				<div className="flex-grow flex h-full pt-[8px]">
-					<div className="w-[220px] h-full bg-[#0a0a0c]/95 text-[#e4e4e7] rounded-t-md border border-white/[0.08] border-b-0 flex items-center px-[15px] text-[12px] font-medium relative group">
+				<div className="flex-grow flex h-full pt-[10px]">
+					<div className="w-[220px] h-full bg-[#0a0a0c]/95 text-[#e4e4e7] rounded-t-md border border-white/[0.08] border-b-0 flex items-center px-[15px] py-[6px] text-[12px] font-medium relative group">
 						<div className="absolute top-[-1px] left-0 w-full h-[2px] bg-gradient-to-r from-[#a855f7] to-[#f472b6]" />
 						<span className="mr-[10px] opacity-80 group-hover:opacity-100 transition-opacity">
 							{config.tabIcon}

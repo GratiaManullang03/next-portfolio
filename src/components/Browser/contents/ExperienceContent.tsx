@@ -22,7 +22,7 @@ import {
 	Experience,
 } from "@/data/experience";
 import CyberCard from "@/components/ui/CyberCard";
-import ShuffleText from "@/components/ui/ShuffleText";
+import SplitText from "@/components/ui/SplitText";
 
 // --- Variants ---
 const containerVariants: Variants = {
@@ -46,7 +46,7 @@ const cardVariants: Variants = {
 };
 
 // --- Data Judul Shuffle ---
-const SHUFFLE_TITLES = [
+const SPLIT_TITLES = [
 	"EXPERIENCE_LOGS",
 	"CAREER_HISTORY",
 	"SYSTEM_ARCHIVES",
@@ -71,7 +71,7 @@ export default function ExperienceContent() {
 
 	useEffect(() => {
 		const interval = setInterval(() => {
-			setTitleIndex((prev) => (prev + 1) % SHUFFLE_TITLES.length);
+			setTitleIndex((prev) => (prev + 1) % SPLIT_TITLES.length);
 		}, 3000);
 		return () => clearInterval(interval);
 	}, []);
@@ -92,16 +92,16 @@ export default function ExperienceContent() {
 			/>
 
 			{/* Header & Tabs */}
-			<div className="p-6 border-b border-white/10 bg-[#0a0a0c]/95 backdrop-blur-md sticky top-0 z-20 shrink-0 shadow-lg shadow-black/50">
-				<div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-2">
+			<div className="h-[56px] px-6 py-2 border-b border-white/10 bg-[#0a0a0c]/95 backdrop-blur-md sticky top-0 z-20 shrink-0 shadow-lg shadow-black/50 flex items-center">
+				<div className="flex flex-col md:flex-row justify-between items-center gap-4 w-full">
 					<div className="flex items-center gap-3 w-full md:w-auto">
 						<div className="w-10 h-10 rounded-lg bg-[#a855f7]/10 border border-[#a855f7]/30 flex items-center justify-center text-[#a855f7]">
 							<FiHash className="w-5 h-5" />
 						</div>
 						<div className="flex flex-col">
 							<div className="h-[24px] overflow-hidden">
-								<ShuffleText
-									text={SHUFFLE_TITLES[titleIndex]}
+								<SplitText
+									text={SPLIT_TITLES[titleIndex]}
 									className="text-xl font-bold text-white tracking-widest"
 									targetClassName="text-white"
 								/>
@@ -140,7 +140,7 @@ export default function ExperienceContent() {
 			{/* Scrollable Content */}
 			<div
 				ref={scrollRef}
-				className="flex-1 overflow-y-auto p-6 custom-scrollbar relative scroll-smooth"
+				className="flex-1 overflow-y-auto p-8 custom-scrollbar relative scroll-smooth"
 			>
 				<div
 					ref={contentRef}

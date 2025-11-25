@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 
-interface ShuffleTextProps {
+interface SplitTextProps {
 	text: string;
 	className?: string;
 	targetClassName?: string;
@@ -15,7 +15,7 @@ export default function ShuffleText({
 	text,
 	className = "",
 	targetClassName = "",
-}: ShuffleTextProps) {
+}: SplitTextProps) {
 	return (
 		<motion.div
 			// Key penting agar animasi ulang saat text berubah

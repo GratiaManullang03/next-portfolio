@@ -76,7 +76,7 @@ export default function ProjectContent() {
 			/>
 
 			{/* Header & Filter */}
-			<div className="p-6 border-b border-white/10 bg-[#0a0a0c]/90 backdrop-blur-md sticky top-0 z-20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0 shadow-lg shadow-black/50">
+			<div className="h-[56px] px-6 py-2 border-b border-white/10 bg-[#0a0a0c]/90 backdrop-blur-md sticky top-0 z-20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0 shadow-lg shadow-black/50">
 				<div>
 					<div className="flex items-center gap-2">
 						<span className="text-[#a855f7] text-2xl">◈</span>
@@ -136,7 +136,7 @@ export default function ProjectContent() {
 			</div>
 
 			{/* Main Grid Content */}
-			<div className="flex-1 overflow-y-auto p-6 custom-scrollbar relative">
+			<div className="flex-1 overflow-y-auto p-8 custom-scrollbar relative">
 				<motion.div
 					key={filter}
 					variants={containerVariants}
