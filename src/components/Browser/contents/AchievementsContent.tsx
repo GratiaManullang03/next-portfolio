@@ -1,308 +1,488 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
 	FiAward,
 	FiCheckCircle,
 	FiExternalLink,
 	FiFileText,
-	FiGrid,
+	FiFilter,
+	FiTarget,
+	FiZap,
+	FiCpu,
 } from "react-icons/fi";
 import { achievementsData, Achievement } from "@/data/achievements";
+import Image from "next/image";
 
-// --- SAFELIST FOR TAILWIND V4 SCANNER ---
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const SAFELIST = [
-	"bg-yellow-500",
-	"bg-emerald-500",
-	"text-yellow-500",
-	"text-emerald-500",
-	"border-yellow-500",
-	"border-emerald-500",
-	"shadow-yellow-500",
-	"shadow-emerald-500",
-	"from-yellow-500",
-	"from-emerald-500",
-	"bg-yellow-500/10",
-	"bg-emerald-500/10",
-	"bg-yellow-500/20",
-	"bg-emerald-500/20",
-	"border-yellow-500/30",
-	"border-emerald-500/30",
-	"shadow-yellow-500/20",
-	"shadow-emerald-500/20",
-	"shadow-yellow-500/10",
-	"shadow-emerald-500/10",
-	"shadow-yellow-500/30",
-	"shadow-emerald-500/30",
-	"via-white/20",
+// --- 1. NEW COMPONENT: CYBER SCRAMBLE TITLE ---
+// Efek: Mengacak huruf sebelum menjadi teks asli, lalu berganti kata.
+const TITLES = [
+	"TROPHY_VAULT",
+	"HALL_OF_FAME",
+	"CREDENTIALS_LOG",
+	"ACHIEVEMENTS_DB",
+	"LEGACY_SYSTEM",
 ];
 
+const CyberScramble = () => {
+	const [index, setIndex] = useState(0);
+	const [displayText, setDisplayText] = useState(TITLES[0]);
+	const [isScrambling, setIsScrambling] = useState(false);
+
+	// Characters for the scramble effect
+	const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&";
+
+	useEffect(() => {
+		let interval: NodeJS.Timeout;
+
+		const startScramble = () => {
+			setIsScrambling(true);
+			let scrambleIter = 0;
+			const targetText = TITLES[index];
+			const maxIter = 15; // Berapa lama ngacaknya
+
+			interval = setInterval(() => {
+				const scrambled = targetText
+					.split("")
+					.map((char, i) => {
+						if (char === " ") return " ";
+						if (scrambleIter > maxIter + i * 2) return char; // Reveal char bertahap
+						return chars[Math.floor(Math.random() * chars.length)];
+					})
+					.join("");
+
+				setDisplayText(scrambled);
+				scrambleIter++;
+
+				if (scrambleIter > maxIter + targetText.length * 3) {
+					clearInterval(interval);
+					setIsScrambling(false);
+					// Wait before next word
+					setTimeout(() => {
+						setIndex((prev) => (prev + 1) % TITLES.length);
+					}, 3000);
+				}
+			}, 50);
+		};
+
+		startScramble();
+
+		return () => clearInterval(interval);
+	}, [index]);
+
+	return (
+		<div className="relative inline-block">
+			<h1 className="text-4xl md:text-5xl font-black text-white tracking-tight uppercase font-mono">
+				{displayText}
+				<span className="animate-pulse text-emerald-500">_</span>
+			</h1>
+			<p className="text-[10px] text-emerald-500/60 font-mono tracking-[0.3em] uppercase mt-1">
+				{isScrambling ? "DECRYPTING_SECURE_DATA..." : "ACCESS_GRANTED"}
+			</p>
+		</div>
+	);
+};
+
+// --- MAIN COMPONENT ---
 export default function AchievementsContent() {
 	const [filter, setFilter] = useState<"all" | "award" | "certification">(
 		"all"
 	);
-	const [hoveredId, setHoveredId] = useState<string | null>(null);
-	const [previewItem, setPreviewItem] = useState<Achievement | null>(
-		achievementsData[0] || null
+	const [selectedId, setSelectedId] = useState<string>(
+		achievementsData[0]?.id || ""
 	);
 
+	// Filter Logic
 	const filteredData =
 		filter === "all"
 			? achievementsData
 			: achievementsData.filter((item) => item.category === filter);
 
-	// Update preview saat hover
-	useEffect(() => {
-		if (hoveredId) {
-			const item = achievementsData.find((i) => i.id === hoveredId);
-			if (item) setPreviewItem(item);
-		}
-	}, [hoveredId]);
+	// Mendapatkan item yang sedang aktif
+	const activeItem =
+		achievementsData.find((item) => item.id === selectedId) ||
+		achievementsData[0];
 
-	// Reset jika filter berubah dan item preview hilang
+	// Auto-select item pertama jika filter berubah
 	useEffect(() => {
-		if (previewItem && !filteredData.find((i) => i.id === previewItem.id)) {
-			setPreviewItem(filteredData[0] || null);
+		const exists = filteredData.find((item) => item.id === selectedId);
+		if (!exists && filteredData.length > 0) {
+			setSelectedId(filteredData[0].id);
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [filter, filteredData]);
+	}, [filter, filteredData, selectedId]);
 
 	return (
-		<div className="h-full flex flex-col bg-[#050505] text-gray-300 font-mono overflow-hidden relative">
-			{/* Background Tints (Gold & Emerald) */}
-			<div
-				className="absolute inset-0 opacity-[0.06] pointer-events-none"
-				style={{
-					backgroundImage:
-						"radial-gradient(circle at 80% 20%, #fbbf24 0%, transparent 50%), radial-gradient(circle at 20% 80%, #10b981 0%, transparent 50%)",
-				}}
-			/>
-			<div
-				className="absolute inset-0 opacity-[0.03] pointer-events-none"
-				style={{
-					backgroundImage:
-						"linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)",
-					backgroundSize: "40px 40px",
-				}}
-			/>
+		<div className="h-full w-full bg-[#030303] text-gray-200 font-sans overflow-hidden flex flex-col relative">
+			{/* --- CINEMATIC AMBIENCE --- */}
+			<div className="absolute inset-0 opacity-[0.03] pointer-events-none z-50 mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
 
-			{/* Header */}
-			<div className="h-[56px] px-6 py-2 border-b border-white/10 bg-[#0a0a0c]/95 backdrop-blur-md sticky top-0 z-20 shrink-0 shadow-lg shadow-black/50 flex items-center">
-				<div className="flex flex-col md:flex-row justify-between items-center gap-4 w-full">
-					<div className="flex items-center gap-4 w-full md:w-auto">
-						<div className="w-14 h-14 rounded-xl bg-gradient-to-br from-yellow-500/20 to-yellow-600/10 border border-yellow-500/30 flex items-center justify-center text-yellow-500 shadow-[0_0_25px_rgba(251,191,36,0.2)] p-3 relative overflow-hidden">
-							<FiAward className="w-8 h-8 relative z-10" />
-						</div>
-						<div className="flex flex-col">
-							{/* Title */}
-							<h1 className="text-2xl md:text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500">
-								HALL OF FAME
-							</h1>
-							<span className="text-[11px] text-yellow-500/70 font-mono mt-1 tracking-wider flex items-center gap-2">
-								<span className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
-								AUTHORIZED CREDENTIALS VAULT
+			{/* Background Gradients (Fixed position) */}
+			<div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+				<div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-emerald-900/5 blur-[120px]" />
+				<div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-yellow-900/5 blur-[120px]" />
+			</div>
+
+			{/* --- HEADER SECTION --- */}
+			<div className="shrink-0 px-6 md:px-10 py-6 z-20 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/5 bg-[#030303]/90 backdrop-blur-md shadow-2xl relative">
+				{/* Scanline decoration under header */}
+				<div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent opacity-50" />
+
+				<div>
+					<div className="flex items-center gap-2 mb-2">
+						<FiCpu className="text-emerald-500 animate-spin-slow" />
+						<span className="text-[10px] font-mono tracking-[0.2em] text-gray-500 uppercase">
+							SystemV.2.0 // Secured
+						</span>
+					</div>
+					<CyberScramble />
+				</div>
+
+				{/* Filter "Knobs" */}
+				<div className="flex bg-[#0f0f11] p-1 rounded-full border border-white/10 shadow-inner overflow-x-auto max-w-full">
+					{[
+						{ key: "all", label: "ALL_DATA" },
+						{ key: "award", label: "AWARDS" },
+						{ key: "certification", label: "CERTIFICATES" },
+					].map((tab) => (
+						<button
+							key={tab.key}
+							onClick={() => setFilter(tab.key as any)}
+							className={`px-5 py-2 rounded-full text-[10px] md:text-xs font-bold tracking-wider transition-all duration-500 relative overflow-hidden group ${
+								filter === tab.key
+									? "text-black"
+									: "text-gray-500 hover:text-white"
+							}`}
+						>
+							{filter === tab.key && (
+								<motion.div
+									layoutId="activeFilter"
+									className="absolute inset-0 bg-white"
+									transition={{ type: "spring", stiffness: 300, damping: 30 }}
+								/>
+							)}
+							<span className="relative z-10 flex items-center gap-2">
+								{tab.key === "all" && <FiFilter />}
+								{tab.key === "award" && <FiAward />}
+								{tab.key === "certification" && <FiFileText />}
+								{tab.label}
 							</span>
-						</div>
-					</div>
-
-					{/* Filter Tabs */}
-					<div className="flex p-1 bg-black/60 rounded-lg border border-white/10 w-full md:w-auto overflow-x-auto backdrop-blur-sm">
-						{[
-							{ id: "all", label: "ALL_ENTRIES", icon: FiGrid },
-							{ id: "award", label: "AWARDS", icon: FiAward },
-							{ id: "certification", label: "CERTIFICATES", icon: FiFileText },
-						].map((tab) => (
-							<button
-								key={tab.id}
-								onClick={() => setFilter(tab.id as any)}
-								className={`flex items-center gap-2 px-4 py-2 text-[10px] md:text-xs font-bold rounded-md transition-all duration-300 whitespace-nowrap ${
-									filter === tab.id
-										? "bg-yellow-500 text-black shadow-[0_0_15px_rgba(251,191,36,0.4)]"
-										: "text-gray-500 hover:text-gray-300 hover:bg-white/5"
-								}`}
-							>
-								<tab.icon /> {tab.label}
-							</button>
-						))}
-					</div>
+						</button>
+					))}
 				</div>
 			</div>
 
-			{/* MAIN LAYOUT: Split View */}
-			<div className="flex-1 overflow-hidden relative flex flex-col md:flex-row gap-6 p-8">
-				{/* LEFT COLUMN: The List */}
-				<div className="w-full md:w-5/12 lg:w-4/12 overflow-y-auto custom-scrollbar pr-2 flex flex-col gap-3 order-2 md:order-1 h-full">
-					<div key={filter} className="flex flex-col gap-3 pb-20">
-						{filteredData.map((item) => (
-							<AchievementListItem
-								key={item.id}
-								item={item}
-								isActive={previewItem?.id === item.id}
-								onHover={setHoveredId}
-							/>
-						))}
+			{/* --- CONTENT LAYOUT --- */}
+			<div className="flex-1 overflow-hidden flex flex-col lg:flex-row relative z-10">
+				{/* --- LEFT: SCROLLABLE LIST --- */}
+				<div className="w-full lg:w-[420px] overflow-y-auto custom-scrollbar border-r border-white/5 bg-[#050505]/50 flex flex-col backdrop-blur-sm z-20">
+					<div className="p-4 md:p-6 space-y-2">
+						<AnimatePresence mode="popLayout">
+							{filteredData.map((item, index) => (
+								<motion.div
+									key={item.id}
+									layout
+									initial={{ opacity: 0, x: -20 }}
+									animate={{ opacity: 1, x: 0 }}
+									exit={{ opacity: 0, scale: 0.9 }}
+									transition={{ delay: index * 0.05 }}
+								>
+									<VaultCard
+										item={item}
+										isActive={selectedId === item.id}
+										onClick={() => setSelectedId(item.id)}
+									/>
+								</motion.div>
+							))}
+						</AnimatePresence>
+
+						{filteredData.length === 0 && (
+							<div className="py-20 text-center opacity-50 font-mono text-xs text-red-500">
+								[ERROR: NO DATA FOUND IN THIS SECTOR]
+							</div>
+						)}
 					</div>
-					{filteredData.length === 0 && (
-						<div className="text-center text-gray-500 py-10 italic">
-							No records found in this category.
-						</div>
-					)}
 				</div>
 
-				{/* RIGHT COLUMN: The Holo-Preview */}
-				<div className="w-full md:w-7/12 lg:w-8/12 h-[400px] md:h-auto sticky top-0 order-1 md:order-2 relative">
-					{previewItem && (
-						<AchievementPreview item={previewItem} key={previewItem.id} />
-					)}
+				{/* --- RIGHT: THE SCROLLABLE HOLO STAGE (Desktop) --- */}
+				<div className="hidden lg:flex flex-1 relative bg-[#020202] flex-col overflow-hidden">
+					{/* Fixed Background Elements (Supaya saat discroll background tidak ikut gerak) */}
+					<div className="absolute inset-0 pointer-events-none">
+						<div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#1a1a1a] to-black opacity-40" />
+						<div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-20 bg-[length:100%_2px,3px_100%] opacity-20" />
+					</div>
+
+					{/* Scrollable Content Container */}
+					<div className="flex-1 overflow-y-auto custom-scrollbar relative z-30 p-10 flex items-start justify-center">
+						<div className="w-full max-w-4xl min-h-full flex flex-col items-center justify-center py-10">
+							<AnimatePresence mode="wait">
+								{activeItem && (
+									<StageProjection key={activeItem.id} item={activeItem} />
+								)}
+							</AnimatePresence>
+						</div>
+					</div>
 				</div>
+
+				{/* --- MOBILE: BOTTOM SHEET STYLE (Handled by VaultCard expansion) --- */}
 			</div>
 		</div>
 	);
 }
 
-// --- KOMPONEN LIST ITEM (Kiri) ---
-function AchievementListItem({
+// --- SUB-COMPONENT: VAULT CARD (The List Item) ---
+function VaultCard({
 	item,
 	isActive,
-	onHover,
+	onClick,
 }: {
 	item: Achievement;
 	isActive: boolean;
-	onHover: (id: string | null) => void;
+	onClick: () => void;
 }) {
 	const isAward = item.category === "award";
-	const activeColor = isAward ? "yellow-500" : "emerald-500";
-	const activeBg = isAward ? "bg-yellow-500" : "bg-emerald-500";
-	const activeBorder = isAward ? "border-yellow-500" : "border-emerald-500";
+	const themeColor = isAward ? "text-yellow-500" : "text-emerald-500";
+	const borderColor = isAward
+		? "border-yellow-500/50"
+		: "border-emerald-500/50";
+	const activeBg = isAward ? "bg-yellow-500/5" : "bg-emerald-500/5";
 
 	return (
 		<div
-			onMouseEnter={() => onHover(item.id)}
-			className={`group relative p-4 rounded-xl border transition-all duration-200 cursor-pointer overflow-hidden ${
+			onClick={onClick}
+			className={`relative group cursor-pointer transition-all duration-300 rounded-lg border-l-2 ${
 				isActive
-					? `${activeBg}/10 ${activeBorder} shadow-[0_0_15px_rgba(255,255,255,0.05)]`
-					: "bg-[#0f0f11] border-white/5 hover:border-white/20"
-			}`}
+					? `${borderColor} ${activeBg} bg-opacity-100`
+					: "border-transparent hover:border-white/20 hover:bg-white/[0.03]"
+			} overflow-hidden`}
 		>
-			{/* Active Indicator */}
-			{isActive && (
-				<div className={`absolute left-0 top-0 bottom-0 w-1 ${activeBg}`} />
-			)}
-
-			<div className="flex justify-between items-start gap-3 relative z-10">
-				<div className="flex-1">
-					<div className="flex items-center gap-2 mb-1">
-						<span
-							className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-sm border ${
-								isAward
-									? "text-yellow-500 bg-yellow-500/10 border-yellow-500/30"
-									: "text-emerald-500 bg-emerald-500/10 border-emerald-500/30"
+			<div className="p-4 flex gap-4 items-center relative z-10">
+				{/* Thumbnail (Small) */}
+				<div
+					className={`relative w-12 h-12 shrink-0 rounded overflow-hidden bg-gray-900 border ${
+						isActive ? borderColor : "border-white/10"
+					} transition-colors duration-300`}
+				>
+					{item.thumbnail ? (
+						<Image
+							src={item.thumbnail}
+							alt={item.title}
+							fill
+							className={`object-cover transition-all duration-500 ${
+								isActive
+									? "grayscale-0 opacity-100"
+									: "grayscale opacity-60 group-hover:opacity-100"
 							}`}
-						>
-							{item.category}
+						/>
+					) : (
+						<div className="w-full h-full flex items-center justify-center text-gray-700">
+							<FiAward />
+						</div>
+					)}
+				</div>
+
+				{/* Text Info */}
+				<div className="flex-1 min-w-0">
+					<div className="flex justify-between items-center mb-1">
+						<span className="text-[10px] text-gray-500 font-mono tracking-wider">
+							{item.date}
 						</span>
-						<span className="text-xs text-gray-500">{item.date}</span>
+						{item.rank && (
+							<span
+								className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-black border ${
+									isActive ? borderColor : "border-white/10 text-gray-500"
+								} ${isActive ? themeColor : ""}`}
+							>
+								{item.rank}
+							</span>
+						)}
 					</div>
 					<h3
-						className={`text-sm md:text-base font-bold transition-colors ${
-							isActive ? "text-white" : "text-gray-300 group-hover:text-white"
+						className={`text-sm font-bold leading-tight transition-colors ${
+							isActive
+								? "text-white"
+								: "text-gray-400 group-hover:text-gray-200"
 						}`}
 					>
 						{item.title}
 					</h3>
-					<p className="text-xs text-gray-500 mt-1 truncate">{item.issuer}</p>
+				</div>
+			</div>
+
+			{/* ANIMATED UNDERLINE (Left to Right wipe) */}
+			{isActive && (
+				<motion.div
+					layoutId="activeGlow"
+					className={`absolute bottom-0 left-0 right-0 h-[1px] ${
+						isAward
+							? "bg-gradient-to-r from-yellow-500 to-transparent"
+							: "bg-gradient-to-r from-emerald-500 to-transparent"
+					}`}
+					initial={{ scaleX: 0, opacity: 0, originX: 0 }} // Start from left
+					animate={{ scaleX: 1, opacity: 1, originX: 0 }} // Wipe to right
+					exit={{ opacity: 0 }}
+					transition={{ duration: 0.4, ease: "easeOut" }}
+				/>
+			)}
+
+			{/* --- MOBILE EXPANDABLE CONTENT --- */}
+			<div
+				className={`lg:hidden overflow-hidden transition-all duration-500 ease-in-out ${
+					isActive ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+				}`}
+			>
+				<div className="p-4 pt-0 mt-2 border-t border-white/5 bg-black/20">
+					<p className="text-xs text-gray-400 leading-relaxed font-light mb-4">
+						{item.description}
+					</p>
+					{item.credentialUrl && (
+						<a
+							href={item.credentialUrl}
+							target="_blank"
+							rel="noopener noreferrer"
+							className="w-full py-3 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/30 text-center rounded text-xs font-bold text-white transition-all flex items-center justify-center gap-2"
+						>
+							<FiExternalLink /> OPEN CREDENTIAL FILE
+						</a>
+					)}
 				</div>
 			</div>
 		</div>
 	);
 }
 
-// --- KOMPONEN PREVIEW (Kanan) ---
-function AchievementPreview({ item }: { item: Achievement }) {
+// --- SUB-COMPONENT: STAGE PROJECTION (The Right Side) ---
+function StageProjection({ item }: { item: Achievement }) {
 	const isAward = item.category === "award";
-	const themeColor = isAward ? "yellow-500" : "emerald-500";
-	const borderColor = isAward ? "border-yellow-500" : "border-emerald-500";
-	const shadowColor = isAward ? "shadow-yellow-500" : "shadow-emerald-500";
-	const textColor = isAward ? "text-yellow-500" : "text-emerald-500";
-	const bgColor = isAward ? "bg-yellow-500" : "bg-emerald-500";
-	const fromColor = isAward ? "from-yellow-500" : "from-emerald-500";
+	const accentColor = isAward ? "#eab308" : "#10b981"; // yellow-500 : emerald-500
 
 	return (
-		<div
-			className={`h-full w-full rounded-2xl overflow-hidden relative group border-2 ${borderColor}/30 bg-[#0a0a0c] flex flex-col shadow-2xl ${shadowColor}/10 transition-opacity duration-200`}
+		<motion.div
+			initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
+			animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+			exit={{ opacity: 0, y: -20, filter: "blur(10px)" }}
+			transition={{ duration: 0.5, ease: "easeOut" }}
+			className="w-full flex flex-col items-center text-center"
 		>
-			{/* Decorative Overlay */}
-			<div
-				className={`absolute inset-0 bg-gradient-to-b ${fromColor}/10 via-transparent to-black/80 z-10 pointer-events-none`}
-			/>
-
-			{/* Header Image Area */}
-			<div className="h-[40%] md:h-[50%] relative overflow-hidden shrink-0">
-				{item.thumbnail ? (
-					// eslint-disable-next-line @next/next/no-img-element
-					<img
-						src={item.thumbnail}
-						alt={item.title}
-						className="w-full h-full object-cover opacity-80 grayscale group-hover:grayscale-0 transition-all duration-700"
+			{/* 1. Header Metadata */}
+			<motion.div
+				initial={{ opacity: 0 }}
+				animate={{ opacity: 1 }}
+				transition={{ delay: 0.2 }}
+				className="flex flex-col items-center gap-2 mb-8"
+			>
+				<div className="px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur text-[10px] font-mono tracking-widest uppercase text-gray-400 flex items-center gap-2">
+					<span
+						className="w-1.5 h-1.5 rounded-full animate-pulse"
+						style={{ background: accentColor }}
 					/>
-				) : (
-					<div
-						className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-900 to-black`}
-					>
-						<FiAward className={`w-20 h-20 ${textColor}/20`} />
-					</div>
-				)}
+					SECURE_ID: {item.id.toUpperCase()}
+				</div>
+			</motion.div>
 
-				{/* Rank Badge */}
-				{item.rank && (
-					<div
-						className={`absolute top-4 right-4 ${bgColor} text-black text-xs font-black px-3 py-1.5 rounded-md shadow-lg ${shadowColor}/30 z-20 flex items-center gap-2`}
-					>
-						<FiAward /> {item.rank.toUpperCase()}
-					</div>
-				)}
+			{/* 2. The Holographic Image Container */}
+			<div className="relative group perspective-1000 mb-10 w-full max-w-2xl">
+				{/* Ambient Glow Behind */}
+				<div
+					className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] rounded-full opacity-20 blur-[80px] transition-colors duration-1000"
+					style={{ backgroundColor: accentColor }}
+				/>
+
+				<motion.div
+					className="relative w-full aspect-video rounded-xl overflow-hidden border border-white/10 shadow-2xl bg-[#0a0a0c] z-10"
+					whileHover={{ scale: 1.01 }}
+					transition={{ type: "spring", stiffness: 100 }}
+				>
+					{item.thumbnail ? (
+						<Image
+							src={item.thumbnail}
+							alt={item.title}
+							fill
+							className="object-cover"
+							priority
+						/>
+					) : (
+						<div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-black">
+							<FiAward className="w-20 h-20 text-gray-800" />
+						</div>
+					)}
+
+					{/* Cinematic Overlay Gradient */}
+					<div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
+
+					{/* Corner Accents */}
+					<div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-white/30 rounded-tl-lg" />
+					<div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-white/30 rounded-tr-lg" />
+					<div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-white/30 rounded-bl-lg" />
+					<div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-white/30 rounded-br-lg" />
+				</motion.div>
 			</div>
 
-			{/* Content Area */}
-			<div className="flex-1 p-4 md:p-6 lg:p-8 relative z-20 flex flex-col bg-gradient-to-t from-[#0f0f11] to-transparent min-h-0">
-				<div className="flex-1 min-h-0 flex flex-col">
-					<div className="flex items-center gap-2 mb-2 text-sm font-medium text-gray-400">
-						<span className={`w-2 h-2 rounded-full ${bgColor}`}></span>
-						ISSUED BY: <span className="text-white">{item.issuer}</span>
-					</div>
-					<h2
-						className={`text-xl md:text-2xl lg:text-3xl font-black text-white mb-3 md:mb-4 leading-tight group-hover:${textColor} transition-colors duration-300`}
+			{/* 3. Typography Details */}
+			<div className="space-y-6 max-w-2xl relative z-20">
+				<div>
+					<motion.h2
+						className="text-3xl md:text-5xl font-black text-white leading-tight uppercase tracking-tight mb-4"
+						style={{ textShadow: `0 0 30px ${accentColor}40` }}
 					>
 						{item.title}
-					</h2>
-					<p className="text-gray-400 leading-relaxed text-xs md:text-sm lg:text-base font-light line-clamp-3 md:line-clamp-none">
-						{item.description}
-					</p>
-				</div>
+					</motion.h2>
 
-				{/* Footer Actions */}
-				<div className="mt-auto pt-4 md:pt-6 border-t border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 md:gap-0 h-auto md:h-16">
-					<div className="text-[10px] md:text-xs font-mono text-gray-500 flex items-center leading-none">
-						DATE: <span className="text-white ml-1">{item.date}</span>
-					</div>
-
-					{item.credentialUrl ? (
-						<a
-							href={item.credentialUrl}
-							target="_blank"
-							rel="noopener noreferrer"
-							className={`w-full md:w-auto flex items-center justify-center gap-2 px-3 md:px-4 py-2 md:py-2.5 text-xs md:text-sm font-bold rounded-md transition-all ${bgColor} text-black shadow-lg ${shadowColor}/20 hover:${shadowColor}/40 hover:-translate-y-1`}
-						>
-							<FiCheckCircle /> VERIFY CREDENTIAL
-						</a>
-					) : (
-						<span className="w-full md:w-auto flex items-center justify-center gap-2 px-3 md:px-4 py-2 md:py-2.5 text-xs md:text-sm font-bold text-gray-500 bg-white/5 rounded-md cursor-not-allowed opacity-70">
-							<FiExternalLink /> ENTRY PRIVATE
+					<div className="flex flex-wrap items-center justify-center gap-4 text-xs md:text-sm font-mono text-gray-400">
+						<span className="flex items-center gap-2">
+							<FiTarget className="text-white" /> {item.issuer}
 						</span>
-					)}
+						<span>//</span>
+						<span>{item.date}</span>
+						{item.rank && (
+							<>
+								<span>//</span>
+								<span className="font-bold text-white px-2 py-0.5 bg-white/10 rounded">
+									{item.rank}
+								</span>
+							</>
+						)}
+					</div>
 				</div>
+
+				<div className="w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+				<motion.p className="text-base md:text-lg text-gray-400 font-light leading-relaxed">
+					{item.description}
+				</motion.p>
 			</div>
-		</div>
+
+			{/* 4. Actions */}
+			<motion.div className="mt-10 flex flex-col items-center gap-4">
+				{item.credentialUrl ? (
+					<a
+						href={item.credentialUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+						className="group relative px-10 py-4 bg-white text-black font-black tracking-wider uppercase rounded-sm overflow-hidden transition-transform hover:-translate-y-1"
+					>
+						<span className="relative z-10 flex items-center gap-2">
+							<FiCheckCircle className="w-5 h-5" /> View Credential
+						</span>
+						{/* Hover Fill Effect */}
+						<div
+							className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 mix-blend-multiply"
+							style={{ backgroundColor: accentColor }}
+						/>
+						{/* Shine Effect */}
+						<div className="absolute top-0 -left-[100%] w-full h-full bg-gradient-to-r from-transparent via-white/50 to-transparent transform -skew-x-12 transition-all duration-700 group-hover:left-[100%]" />
+					</a>
+				) : (
+					<div className="px-8 py-3 border border-dashed border-white/20 text-gray-500 font-mono text-xs rounded-full flex items-center gap-2 cursor-not-allowed">
+						<FiZap /> DATA_LOCKED / NO_LINK
+					</div>
+				)}
+
+				<p className="text-[10px] text-gray-600 font-mono mt-4 max-w-md">
+					*Authorized personnel only. Redistribution of this certificate data
+					without proper clearance is a violation of protocol 734.
+				</p>
+			</motion.div>
+		</motion.div>
 	);
 }
