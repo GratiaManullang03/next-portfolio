@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { FiDownload, FiExternalLink, FiFileText } from "react-icons/fi";
-import SplitText from "@/components/ui/SplitText";
+import RotatingText from "@/components/ui/RotatingText";
 
 const CV_SUBTITLES = [
 	"RESUME_DATA // READ_ONLY_MODE",
@@ -15,6 +15,7 @@ const CV_SUBTITLES = [
 export default function CVContent() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [subtitleIndex, setSubtitleIndex] = useState(0);
+	const [animKey, setAnimKey] = useState(0);
 	const pdfUrl = "/files/CV-Felix-Gratia-Mangatur-Manullang.pdf";
 
 	useEffect(() => {
@@ -22,6 +23,14 @@ export default function CVContent() {
 			setSubtitleIndex((prev) => (prev + 1) % CV_SUBTITLES.length);
 		}, 3000);
 		return () => clearInterval(interval);
+	}, []);
+
+	// Trigger continuous re-animation every 5 seconds
+	useEffect(() => {
+		const animInterval = setInterval(() => {
+			setAnimKey((prev) => prev + 1);
+		}, 5000);
+		return () => clearInterval(animInterval);
 	}, []);
 
 	const handleDownload = () => {
@@ -53,10 +62,13 @@ export default function CVContent() {
 						</span>
 					</div>
 
-					<SplitText
-						text="CURRICULUM_VITAE"
+					<RotatingText
+						key={animKey}
+						texts={["CURRICULUM_VITAE"]}
 						className="text-2xl md:text-3xl font-black text-white tracking-widest"
-						targetClassName="text-white"
+						rotationInterval={999999}
+						staggerDuration={0.03}
+						staggerFrom="last"
 					/>
 
 					<p className="text-[10px] text-white/70 font-mono tracking-[0.3em] uppercase mt-1 animate-pulse">

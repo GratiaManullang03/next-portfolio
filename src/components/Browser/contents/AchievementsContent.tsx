@@ -14,9 +14,8 @@ import {
 } from "react-icons/fi";
 import { achievementsData, Achievement } from "@/data/achievements";
 import Image from "next/image";
+import ShuffleText from "@/components/ui/ShuffleText";
 
-// --- 1. NEW COMPONENT: CYBER SCRAMBLE TITLE ---
-// Efek: Mengacak huruf sebelum menjadi teks asli, lalu berganti kata.
 const TITLES = [
 	"TROPHY_VAULT",
 	"HALL_OF_FAME",
@@ -24,65 +23,6 @@ const TITLES = [
 	"ACHIEVEMENTS_DB",
 	"LEGACY_SYSTEM",
 ];
-
-const CyberScramble = () => {
-	const [index, setIndex] = useState(0);
-	const [displayText, setDisplayText] = useState(TITLES[0]);
-	const [isScrambling, setIsScrambling] = useState(false);
-
-	// Characters for the scramble effect
-	const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&";
-
-	useEffect(() => {
-		let interval: NodeJS.Timeout;
-
-		const startScramble = () => {
-			setIsScrambling(true);
-			let scrambleIter = 0;
-			const targetText = TITLES[index];
-			const maxIter = 15; // Berapa lama ngacaknya
-
-			interval = setInterval(() => {
-				const scrambled = targetText
-					.split("")
-					.map((char, i) => {
-						if (char === " ") return " ";
-						if (scrambleIter > maxIter + i * 2) return char; // Reveal char bertahap
-						return chars[Math.floor(Math.random() * chars.length)];
-					})
-					.join("");
-
-				setDisplayText(scrambled);
-				scrambleIter++;
-
-				if (scrambleIter > maxIter + targetText.length * 3) {
-					clearInterval(interval);
-					setIsScrambling(false);
-					// Wait before next word
-					setTimeout(() => {
-						setIndex((prev) => (prev + 1) % TITLES.length);
-					}, 3000);
-				}
-			}, 50);
-		};
-
-		startScramble();
-
-		return () => clearInterval(interval);
-	}, [index]);
-
-	return (
-		<div className="relative inline-block">
-			<h1 className="text-2xl md:text-3xl font-black text-white tracking-tight uppercase font-mono">
-				{displayText}
-				<span className="animate-pulse text-emerald-500">_</span>
-			</h1>
-			<p className="text-[10px] text-emerald-400/80 font-mono tracking-[0.3em] uppercase mt-1">
-				{isScrambling ? "DECRYPTING_SECURE_DATA..." : "ACCESS_GRANTED"}
-			</p>
-		</div>
-	);
-};
 
 // --- MAIN COMPONENT ---
 export default function AchievementsContent() {
@@ -135,7 +75,15 @@ export default function AchievementsContent() {
 							SystemV.2.0 // Secured
 						</span>
 					</div>
-					<CyberScramble />
+					<ShuffleText
+						texts={TITLES}
+						className="text-2xl md:text-3xl font-black text-white tracking-tight uppercase font-mono"
+						interval={2500}
+						duration={0.65}
+						shuffleTimes={6}
+						scrambleChars="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
+						stagger={0.04}
+					/>
 				</div>
 
 				{/* Filter "Knobs" */}
@@ -268,6 +216,7 @@ function VaultCard({
 							src={item.thumbnail}
 							alt={item.title}
 							fill
+							sizes="48px"
 							className={`object-cover transition-all duration-500 ${
 								isActive
 									? "grayscale-0 opacity-100"
@@ -398,6 +347,7 @@ function StageProjection({ item }: { item: Achievement }) {
 							src={item.thumbnail}
 							alt={item.title}
 							fill
+							sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 800px"
 							className="object-cover"
 							priority
 						/>
