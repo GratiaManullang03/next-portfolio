@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
 
 interface ShuffleTextProps {
@@ -32,7 +32,7 @@ export default function ShuffleText({
 	useEffect(() => {
 		const cycleInterval = setInterval(() => {
 			setIsShuffling(true);
-			prevTextRef.current = texts[currentIndex]; // Store current before transition
+			prevTextRef.current = texts[currentIndex];
 			setCurrentIndex((prev) => (prev + 1) % texts.length);
 		}, interval);
 
@@ -40,78 +40,78 @@ export default function ShuffleText({
 	}, [texts.length, interval, currentIndex]);
 
 	useEffect(() => {
-		if (currentIndex === 0 && !isShuffling) return; // Skip initial mount
+		if (currentIndex === 0 && !isShuffling) return;
 
 		setIsShuffling(true);
 		const timeout = setTimeout(() => {
 			setIsShuffling(false);
-		}, duration * 1000 * 2 + 800); // 2x duration for 2 stages
+		}, duration * 1000 * 2 + 800);
 
 		return () => clearTimeout(timeout);
 	}, [currentIndex, duration]);
 
 	const maxLen = Math.max(currentText.length, prevText.length);
 
-	const getDelay = (index: number) => {
-		// Stage 1: Odd positions animate first
-		// Stage 2: Even positions animate second (with delay = duration)
-		const isOdd = index % 2 === 1;
-		if (isOdd) {
-			// Odd: start immediately with internal stagger
-			return (Math.floor(index / 2) * stagger);
-		} else {
-			// Even: wait for duration (stage 1 complete), then start with stagger
-			return duration + (Math.floor(index / 2) * stagger);
-		}
-	};
-
-	const getIntermediateChars = (oldChar: string, targetChar: string, rolls: number) => {
-		const intermediates: string[] = [];
+	// Generate film strip: pure old chars → pure target chars (NO RANDOM!)
+	const characterData = useMemo(() => {
+		const rolls = Math.max(1, Math.floor(shuffleTimes));
 		const halfRolls = Math.floor(rolls / 2);
 
-		for (let i = 0; i < rolls; i++) {
-			if (i < halfRolls) {
-				// First half: bias towards old character
-				intermediates.push(
-					Math.random() > 0.5
-						? oldChar || scrambleChars[Math.floor(Math.random() * scrambleChars.length)]
-						: scrambleChars[Math.floor(Math.random() * scrambleChars.length)]
-				);
-			} else {
-				// Second half: bias towards target character
-				intermediates.push(
-					Math.random() > 0.3
-						? targetChar || scrambleChars[Math.floor(Math.random() * scrambleChars.length)]
-						: scrambleChars[Math.floor(Math.random() * scrambleChars.length)]
-				);
-			}
-		}
+		return Array.from({ length: maxLen }).map((_, index) => {
+			const targetChar = currentText[index] || "";
+			const oldChar = prevText[index] || "";
 
-		return intermediates;
+			// Film strip: first half = old char, second half = target char
+			const intermediates: string[] = [];
+			for (let i = 0; i < rolls; i++) {
+				if (i < halfRolls) {
+					intermediates.push(oldChar || " ");
+				} else {
+					intermediates.push(targetChar || " ");
+				}
+			}
+
+			return {
+				targetChar,
+				oldChar,
+				intermediates,
+			};
+		});
+	}, [currentIndex, currentText, prevText, maxLen, shuffleTimes]);
+
+	const getDelay = (index: number) => {
+		// CRITICAL FIX: EVEN positions animate FIRST, ODD positions SECOND
+		const isEven = index % 2 === 0;
+		if (isEven) {
+			// Even: start immediately with stagger
+			return Math.floor(index / 2) * stagger;
+		} else {
+			// Odd: wait for duration (stage 1 complete), then start
+			return duration + (Math.floor(index / 2) * stagger);
+		}
 	};
 
 	return (
 		<div className="relative inline-block">
 			<div className={`${className} inline-flex`}>
-				{Array.from({ length: maxLen }).map((_, index) => {
-					const targetChar = currentText[index] || "";
-					const oldChar = prevText[index] || "";
+				{characterData.map(({ targetChar, intermediates }, index) => {
+					// Handle empty characters
+					if (targetChar === "" && intermediates[0] === " ") {
+						return null;
+					}
 
-					// Handle spaces and empty characters
-					if (targetChar === " " || (targetChar === "" && oldChar === "")) {
+					// Handle spaces
+					if (targetChar === " ") {
 						return (
 							<span
 								key={`${currentIndex}-${index}`}
 								className="inline-block"
 								style={{ width: "0.3em" }}
 							>
-								{targetChar || "\u00A0"}
+								{" "}
 							</span>
 						);
 					}
-
-					const rolls = Math.max(1, Math.floor(shuffleTimes));
-					const intermediateChars = getIntermediateChars(oldChar, targetChar, rolls);
 
 					return (
 						<span
@@ -123,7 +123,7 @@ export default function ShuffleText({
 						>
 							<motion.span
 								className="inline-flex"
-								initial={{ x: `${-100 * (rolls + 1)}%` }}
+								initial={{ x: `${-100 * (intermediates.length + 1)}%` }}
 								animate={{ x: 0 }}
 								transition={{
 									duration: duration,
@@ -134,7 +134,7 @@ export default function ShuffleText({
 									whiteSpace: "nowrap",
 								}}
 							>
-								{intermediateChars.map((char, i) => (
+								{intermediates.map((char, i) => (
 									<span
 										key={i}
 										className="inline-block"
@@ -153,7 +153,7 @@ export default function ShuffleText({
 										textAlign: "center",
 									}}
 								>
-									{targetChar || "\u00A0"}
+									{targetChar}
 								</span>
 							</motion.span>
 						</span>
