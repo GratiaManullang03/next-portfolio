@@ -1,123 +1,53 @@
-"use client";
+import React from "react";
+import dynamic from "next/dynamic";
+import DecryptedText from "@/components/DecryptedText"; // Menggunakan komponen keren yang sudah ada di repo lu
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import SkillsGlobe from "./SkillsGlobe";
-import TextPressure from "@/components/ui/TextPressure";
-import RotatingText from "@/components/ui/RotatingText";
-import { Skill } from "@/data/skills";
+// Import SkillsGlobe secara dynamic agar tidak error window is undefined saat build
+const SkillsGlobe = dynamic(() => import("./SkillsGlobe"), {
+	ssr: false,
+	loading: () => (
+		<div className="flex items-center justify-center w-full h-full text-green-500/50 font-mono text-sm">
+			INITIALIZING_SYSTEM...
+		</div>
+	),
+});
 
-export default function SkillsContent() {
-	const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
-
+const SkillsContent = () => {
 	return (
-		<div className="relative w-full h-full bg-[#0a0a0a] flex flex-col overflow-hidden">
-			{/* Background Glow Effects */}
-			<div className="absolute inset-0 pointer-events-none">
-				<div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-900/10 rounded-full blur-[128px]" />
-				<div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-900/10 rounded-full blur-[128px]" />
-			</div>
+		<div className="relative w-full h-full bg-black overflow-hidden flex flex-col">
+			{/* 1. Header Section dengan Gradient Background agar text terbaca */}
+			<div className="absolute top-0 left-0 w-full z-20 pointer-events-none">
+				<div className="w-full bg-gradient-to-b from-black via-black/80 to-transparent pt-8 pb-16 px-6 md:px-12 flex flex-col items-center justify-center text-center">
+					<h2 className="text-3xl md:text-5xl font-bold font-mono text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600 mb-3 tracking-tighter drop-shadow-sm">
+						TECHNICAL PROFICIENCY
+					</h2>
 
-			{/* Header Section */}
-			<div className="relative z-30 pt-6 md:pt-8 w-full max-w-4xl mx-auto px-4 pointer-events-none flex-shrink-0">
-				{/* Title using TextPressure */}
-				<div className="h-20 md:h-24 w-full flex items-center justify-center">
-					<TextPressure
-						text="MY ARSENAL"
-						flex={true}
-						alpha={false}
-						stroke={false}
-						width={true}
-						weight={true}
-						italic={true}
-						textColor="#ffffff"
-						strokeColor="#a855f7"
-						minFontSize={28}
-					/>
-				</div>
-
-				{/* Subtitle with rotating text */}
-				<div className="flex items-center justify-center gap-2 font-mono text-xs text-gray-500 mt-2">
-					<span>Loading modules:</span>
-					<div className="bg-[#1e1e1e] px-2 py-1 rounded text-[#a855f7]">
-						<RotatingText
-							texts={[
-								"PROGRAMMING",
-								"FRAMEWORKS",
-								"DATABASES",
-								"DEVOPS",
-								"TOOLS",
-							]}
-							staggerFrom="last"
-							rotationInterval={2000}
-							className="font-bold"
+					<div className="text-sm md:text-lg text-gray-400 max-w-2xl font-light tracking-wide leading-relaxed">
+						<DecryptedText
+							text="A visual representation of my technological stack and expertise."
+							speed={50}
+							maxIterations={20}
+							className="reveal-text"
+							parentClassName="all-letters"
+							encryptedClassName="encrypted-letters"
 						/>
 					</div>
 				</div>
-
-				<p className="text-center text-gray-400 font-mono text-xs md:text-sm mt-3 max-w-md mx-auto">
-					Interactive 3D visualization of my technical proficiency. Drag to
-					rotate, click nodes for details.
-				</p>
 			</div>
 
-			{/* 3D Globe Area */}
-			<div className="relative flex-1 w-full">
-				<div className="absolute inset-0 z-10">
-					<SkillsGlobe onSkillSelect={setSelectedSkill} />
-				</div>
+			{/* 2. Main Content (Globe) */}
+			<div className="relative flex-grow w-full h-full z-10">
+				<SkillsGlobe />
 			</div>
 
-			{/* Skill Detail Modal / Overlay (Appears when clicked) */}
-			<AnimatePresence>
-				{selectedSkill && (
-					<motion.div
-						initial={{ opacity: 0, y: 50 }}
-						animate={{ opacity: 1, y: 0 }}
-						exit={{ opacity: 0, y: 50 }}
-						className="absolute bottom-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"
-					>
-						<div className="bg-[#111111]/90 backdrop-blur-xl border border-[#333] p-5 rounded-2xl shadow-2xl shadow-purple-900/20 max-w-sm w-full pointer-events-auto flex items-center gap-4">
-							<div className="w-14 h-14 bg-[#1a1a1a] rounded-xl p-3 border border-white/5 flex-shrink-0">
-								<img
-									src={selectedSkill.icon}
-									alt={selectedSkill.name}
-									className="w-full h-full object-contain"
-								/>
-							</div>
-							<div className="flex-1 min-w-0">
-								<h3 className="text-lg font-bold text-white mb-1 truncate">
-									{selectedSkill.name}
-								</h3>
-								<div className="flex items-center gap-2 text-xs font-mono text-gray-400">
-									<span
-										className={`w-2 h-2 rounded-full ${
-											selectedSkill.category === "Programming"
-												? "bg-blue-500"
-												: selectedSkill.category === "Web"
-												? "bg-green-500"
-												: selectedSkill.category === "Backend"
-												? "bg-purple-500"
-												: selectedSkill.category === "Database"
-												? "bg-yellow-500"
-												: selectedSkill.category === "DevOps"
-												? "bg-red-500"
-												: "bg-gray-500"
-										}`}
-									/>
-									{selectedSkill.category}
-								</div>
-								<button
-									onClick={() => setSelectedSkill(null)}
-									className="mt-2 text-xs text-[#a855f7] hover:text-[#c084fc] transition-colors"
-								>
-									[Close Details]
-								</button>
-							</div>
-						</div>
-					</motion.div>
-				)}
-			</AnimatePresence>
+			{/* 3. Optional: Footer decoration atau instruction */}
+			<div className="absolute bottom-4 right-6 z-20 pointer-events-none opacity-50 hidden md:block">
+				<span className="text-xs font-mono text-green-500">
+					[ DRAG TO ROTATE ]
+				</span>
+			</div>
 		</div>
 	);
-}
+};
+
+export default SkillsContent;
