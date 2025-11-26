@@ -45,7 +45,7 @@ export default function ShuffleText({
 		setIsShuffling(true);
 		const timeout = setTimeout(() => {
 			setIsShuffling(false);
-		}, duration * 1000 * 2 + 800);
+		}, duration * 500 * 2 + 800);
 
 		return () => clearTimeout(timeout);
 	}, [currentIndex, duration]);
@@ -95,9 +95,43 @@ export default function ShuffleText({
 						);
 					}
 
-					// Handle empty (text shortening)
+					// Handle empty (text shortening) - animate it sliding out
 					if (targetChar === "" && oldChar !== "") {
-						return null;
+						const filmStrip = ["", ...scrambledFrames.map(frame => frame[index]).reverse(), oldChar];
+						const stripWidth = filmStrip.length;
+
+						return (
+							<span
+								key={`pos-${index}`}
+								className="inline-block overflow-hidden"
+								style={{
+									width: "1ch",
+									height: "1em",
+								}}
+							>
+								<motion.span
+									key={`${currentIndex}-${index}`}
+									className="inline-flex"
+									initial={{ x: -(stripWidth - 1) + "ch" }}
+									animate={{ x: 0 }}
+									transition={{
+										delay: getDelay(index),
+										duration: 0.5,
+										ease: "easeInOut",
+									}}
+								>
+									{filmStrip.map((char, i) => (
+										<span
+											key={i}
+											className="inline-block text-center"
+											style={{ width: "1ch" }}
+										>
+											{char}
+										</span>
+									))}
+								</motion.span>
+							</span>
+						);
 					}
 
 					// Build the film strip: [targetChar, ...scrambled chars (reversed), oldChar]
