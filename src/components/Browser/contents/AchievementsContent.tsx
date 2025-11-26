@@ -92,32 +92,36 @@ export default function AchievementsContent() {
 			</div>
 
 			{/* --- HEADER SECTION --- */}
-			<div className="shrink-0 px-6 md:px-10 py-6 z-20 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/5 bg-[#030303]/90 backdrop-blur-md shadow-2xl relative">
+			<div className="shrink-0 px-6 md:px-10 py-5 z-20 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-white/5 bg-[#030303]/90 backdrop-blur-md shadow-2xl relative">
 				{/* Scanline decoration under header */}
 				<div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent opacity-50" />
 
-				<div>
-					<div className="flex items-center gap-2 mb-1">
-						<FiCpu className="text-emerald-500 animate-spin-slow" />
+				<div className="flex-1 w-full md:w-auto">
+					<div className="flex items-center gap-2 mb-2">
+						<FiCpu className="text-emerald-500 animate-spin-slow w-3 h-3" />
 						<span className="text-[10px] font-mono tracking-[0.2em] text-emerald-400/80 uppercase">
 							SystemV.2.0 // Secured
 						</span>
 					</div>
-					<ShuffleText
-						texts={TITLES}
-						className="text-2xl md:text-3xl font-black text-white tracking-tight uppercase font-mono"
-						interval={2500}
-						duration={0.65}
-						shuffleTimes={6}
-						scrambleChars="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
-						stagger={0.04}
-						subtitles={SUBTITLES}
-						subtitleClassName="text-[10px] text-emerald-400/80 font-mono tracking-[0.3em] uppercase mt-1 animate-pulse"
-					/>
+
+					{/* TITLE SECTION WITH CONSISTENT HEIGHT */}
+					<div className="h-10 md:h-12 flex items-center overflow-hidden w-full">
+						<ShuffleText
+							texts={TITLES}
+							className="text-2xl md:text-4xl font-black text-white tracking-widest uppercase font-mono"
+							interval={2500}
+							duration={0.65}
+							shuffleTimes={6}
+							scrambleChars="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
+							stagger={0.04}
+							subtitles={SUBTITLES}
+							subtitleClassName="text-[10px] text-emerald-400/80 font-mono tracking-[0.3em] uppercase mt-2 animate-pulse"
+						/>
+					</div>
 				</div>
 
 				{/* Filter "Knobs" */}
-				<div className="flex bg-[#0f0f11] p-1 rounded-full border border-white/10 shadow-inner overflow-x-auto max-w-full">
+				<div className="flex bg-[#0f0f11] p-1 rounded-full border border-white/10 shadow-inner overflow-x-auto max-w-full w-full md:w-auto">
 					{[
 						{ key: "all", label: "ALL_DATA" },
 						{ key: "award", label: "AWARDS" },
@@ -126,7 +130,7 @@ export default function AchievementsContent() {
 						<button
 							key={tab.key}
 							onClick={() => setFilter(tab.key as any)}
-							className={`px-5 py-2 rounded-full text-[10px] md:text-xs font-bold tracking-wider transition-all duration-500 relative overflow-hidden group ${
+							className={`flex-1 md:flex-none px-4 md:px-5 py-2 md:py-2 rounded-full text-[10px] md:text-xs font-bold tracking-wider transition-all duration-500 relative overflow-hidden group ${
 								filter === tab.key
 									? "text-black"
 									: "text-gray-500 hover:text-white"
@@ -139,10 +143,10 @@ export default function AchievementsContent() {
 									transition={{ type: "spring", stiffness: 300, damping: 30 }}
 								/>
 							)}
-							<span className="relative z-10 flex items-center gap-2">
-								{tab.key === "all" && <FiFilter />}
-								{tab.key === "award" && <FiAward />}
-								{tab.key === "certification" && <FiFileText />}
+							<span className="relative z-10 flex items-center justify-center gap-2">
+								{tab.key === "all" && <FiFilter className="w-3 h-3" />}
+								{tab.key === "award" && <FiAward className="w-3 h-3" />}
+								{tab.key === "certification" && <FiFileText className="w-3 h-3" />}
 								{tab.label}
 							</span>
 						</button>
@@ -153,8 +157,8 @@ export default function AchievementsContent() {
 			{/* --- CONTENT LAYOUT --- */}
 			<div className="flex-1 overflow-hidden flex flex-col lg:flex-row relative z-10">
 				{/* --- LEFT: SCROLLABLE LIST --- */}
-				<div ref={leftScrollRef} className="w-full lg:w-[420px] overflow-y-auto custom-scrollbar border-r border-white/5 bg-[#050505]/50 flex flex-col backdrop-blur-sm z-20">
-					<div className="p-4 md:p-6 space-y-2">
+				<div ref={leftScrollRef} className="w-full lg:w-[420px] overflow-y-auto custom-scrollbar border-b lg:border-r lg:border-b-0 border-white/5 bg-[#050505]/50 flex flex-col backdrop-blur-sm z-20">
+					<div className="p-3 md:p-6 space-y-2">
 						<AnimatePresence mode="popLayout">
 							{filteredData.map((item, index) => (
 								<motion.div
@@ -191,7 +195,7 @@ export default function AchievementsContent() {
 					</div>
 
 					{/* Scrollable Content Container */}
-					<div ref={rightScrollRef} className="flex-1 overflow-y-auto custom-scrollbar relative z-30 p-10 flex items-start justify-center">
+					<div ref={rightScrollRef} className="flex-1 overflow-y-auto custom-scrollbar relative z-30 p-6 md:p-10 flex items-start justify-center">
 						<div className="w-full max-w-4xl min-h-full flex flex-col items-center justify-center py-10">
 							<AnimatePresence mode="wait">
 								{activeItem && (
@@ -234,10 +238,10 @@ function VaultCard({
 					: "border-transparent hover:border-white/20 hover:bg-white/[0.03]"
 			} overflow-hidden`}
 		>
-			<div className="p-4 flex gap-4 items-center relative z-10">
+			<div className="p-3 md:p-4 flex gap-3 md:gap-4 items-center relative z-10">
 				{/* Thumbnail (Small) */}
 				<div
-					className={`relative w-12 h-12 shrink-0 rounded overflow-hidden bg-gray-900 border ${
+					className={`relative w-10 h-10 md:w-12 md:h-12 shrink-0 rounded overflow-hidden bg-gray-900 border ${
 						isActive ? borderColor : "border-white/10"
 					} transition-colors duration-300`}
 				>
@@ -263,12 +267,12 @@ function VaultCard({
 				{/* Text Info */}
 				<div className="flex-1 min-w-0">
 					<div className="flex justify-between items-center mb-1">
-						<span className="text-[10px] text-gray-500 font-mono tracking-wider">
+						<span className="text-[9px] md:text-[10px] text-gray-500 font-mono tracking-wider">
 							{item.date}
 						</span>
 						{item.rank && (
 							<span
-								className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-black border ${
+								className={`text-[8px] md:text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-black border ${
 									isActive ? borderColor : "border-white/10 text-gray-500"
 								} ${isActive ? themeColor : ""}`}
 							>
@@ -277,7 +281,7 @@ function VaultCard({
 						)}
 					</div>
 					<h3
-						className={`text-sm font-bold leading-tight transition-colors ${
+						className={`text-xs md:text-sm font-bold leading-tight transition-colors ${
 							isActive
 								? "text-white"
 								: "text-gray-400 group-hover:text-gray-200"
@@ -310,8 +314,8 @@ function VaultCard({
 					isActive ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
 				}`}
 			>
-				<div className="p-4 pt-0 mt-2 border-t border-white/5 bg-black/20">
-					<p className="text-xs text-gray-400 leading-relaxed font-light mb-4">
+				<div className="p-3 md:p-4 pt-0 mt-2 border-t border-white/5 bg-black/20">
+					<p className="text-[11px] md:text-xs text-gray-400 leading-relaxed font-light mb-4">
 						{item.description}
 					</p>
 					{item.credentialUrl && (
@@ -319,9 +323,9 @@ function VaultCard({
 							href={item.credentialUrl}
 							target="_blank"
 							rel="noopener noreferrer"
-							className="w-full py-3 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/30 text-center rounded text-xs font-bold text-white transition-all flex items-center justify-center gap-2"
+							className="w-full py-2.5 md:py-3 bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/30 text-center rounded text-[10px] md:text-xs font-bold text-white transition-all flex items-center justify-center gap-2"
 						>
-							<FiExternalLink /> OPEN CREDENTIAL FILE
+							<FiExternalLink className="w-3 h-3" /> OPEN CREDENTIAL FILE
 						</a>
 					)}
 				</div>
@@ -399,25 +403,25 @@ function StageProjection({ item }: { item: Achievement }) {
 			</div>
 
 			{/* 3. Typography Details */}
-			<div className="space-y-6 max-w-2xl relative z-20">
+			<div className="space-y-6 max-w-2xl relative z-20 px-4 md:px-0">
 				<div>
 					<motion.h2
-						className="text-3xl md:text-5xl font-black text-white leading-tight uppercase tracking-tight mb-4"
+						className="text-2xl md:text-5xl font-black text-white leading-tight uppercase tracking-tight mb-4"
 						style={{ textShadow: `0 0 30px ${accentColor}40` }}
 					>
 						{item.title}
 					</motion.h2>
 
-					<div className="flex flex-wrap items-center justify-center gap-4 text-xs md:text-sm font-mono text-gray-400">
+					<div className="flex flex-wrap items-center justify-center gap-2 md:gap-4 text-[10px] md:text-sm font-mono text-gray-400">
 						<span className="flex items-center gap-2">
-							<FiTarget className="text-white" /> {item.issuer}
+							<FiTarget className="text-white w-3 h-3" /> {item.issuer}
 						</span>
 						<span>//</span>
 						<span>{item.date}</span>
 						{item.rank && (
 							<>
 								<span>//</span>
-								<span className="font-bold text-white px-2 py-0.5 bg-white/10 rounded">
+								<span className="font-bold text-white px-2 py-0.5 bg-white/10 rounded text-[10px] md:text-xs">
 									{item.rank}
 								</span>
 							</>
@@ -427,22 +431,22 @@ function StageProjection({ item }: { item: Achievement }) {
 
 				<div className="w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
-				<motion.p className="text-base md:text-lg text-gray-400 font-light leading-relaxed">
+				<motion.p className="text-sm md:text-lg text-gray-400 font-light leading-relaxed">
 					{item.description}
 				</motion.p>
 			</div>
 
 			{/* 4. Actions */}
-			<motion.div className="mt-10 flex flex-col items-center gap-4">
+			<motion.div className="mt-6 md:mt-10 flex flex-col items-center gap-4 px-4 md:px-0">
 				{item.credentialUrl ? (
 					<a
 						href={item.credentialUrl}
 						target="_blank"
 						rel="noopener noreferrer"
-						className="group relative px-10 py-4 bg-white text-black font-black tracking-wider uppercase rounded-sm overflow-hidden transition-transform hover:-translate-y-1"
+						className="group relative px-6 md:px-10 py-3 md:py-4 bg-white text-black font-black tracking-wider uppercase rounded-sm overflow-hidden transition-transform hover:-translate-y-1 text-xs md:text-base"
 					>
 						<span className="relative z-10 flex items-center gap-2">
-							<FiCheckCircle className="w-5 h-5" /> View Credential
+							<FiCheckCircle className="w-4 h-4 md:w-5 md:h-5" /> View Credential
 						</span>
 						{/* Hover Fill Effect */}
 						<div
@@ -453,12 +457,12 @@ function StageProjection({ item }: { item: Achievement }) {
 						<div className="absolute top-0 -left-[100%] w-full h-full bg-gradient-to-r from-transparent via-white/50 to-transparent transform -skew-x-12 transition-all duration-700 group-hover:left-[100%]" />
 					</a>
 				) : (
-					<div className="px-8 py-3 border border-dashed border-white/20 text-gray-500 font-mono text-xs rounded-full flex items-center gap-2 cursor-not-allowed">
-						<FiZap /> DATA_LOCKED / NO_LINK
+					<div className="px-6 md:px-8 py-2.5 md:py-3 border border-dashed border-white/20 text-gray-500 font-mono text-[10px] md:text-xs rounded-full flex items-center gap-2 cursor-not-allowed">
+						<FiZap className="w-3 h-3" /> DATA_LOCKED / NO_LINK
 					</div>
 				)}
 
-				<p className="text-[10px] text-gray-600 font-mono mt-4 max-w-md">
+				<p className="text-[9px] md:text-[10px] text-gray-600 font-mono mt-4 max-w-md text-center">
 					*Authorized personnel only. Redistribution of this certificate data
 					without proper clearance is a violation of protocol 734.
 				</p>

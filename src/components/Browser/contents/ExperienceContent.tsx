@@ -113,22 +113,24 @@ export default function ExperienceContent() {
 			<div className="shrink-0 px-6 md:px-10 py-5 border-b border-white/5 bg-[#030303]/90 backdrop-blur-md sticky top-0 z-20 shadow-2xl flex flex-col md:flex-row justify-between items-end gap-6 relative">
 				<div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent opacity-50" />
 
-				<div className="flex-1">
-					<div className="flex items-center gap-2 mb-1">
+				<div className="flex-1 w-full md:w-auto">
+					<div className="flex items-center gap-2 mb-2">
 						<FiTerminal className="text-cyan-500 w-3 h-3" />
 						<span className="text-[10px] font-mono tracking-[0.2em] text-cyan-400/80 uppercase">
 							// CAREER_TIMELINE
 						</span>
 					</div>
 
-					{/* SCALE UP TITLE */}
-					<SplitText
-						text={SPLIT_TITLES[titleIndex]}
-						className="text-2xl md:text-3xl font-black text-white tracking-widest"
-						targetClassName="text-white"
-					/>
+					{/* TITLE SECTION WITH CONSISTENT HEIGHT */}
+					<div className="h-10 md:h-12 flex items-center overflow-hidden w-full">
+						<SplitText
+							text={SPLIT_TITLES[titleIndex]}
+							className="text-2xl md:text-4xl font-black text-white tracking-widest"
+							targetClassName="text-white"
+						/>
+					</div>
 
-					<p className="text-[10px] text-cyan-400/80 font-mono tracking-[0.3em] uppercase mt-1 animate-pulse">
+					<p className="text-[10px] text-cyan-400/80 font-mono tracking-[0.3em] uppercase mt-2 animate-pulse truncate">
 						{EXPERIENCE_SUBTITLES[subtitleIndex]}
 					</p>
 				</div>
@@ -136,23 +138,23 @@ export default function ExperienceContent() {
 				<div className="flex p-1 bg-black/40 rounded-lg border border-white/10 w-full md:w-auto">
 					<button
 						onClick={() => setActiveTab("work")}
-						className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 text-xs font-bold rounded-md transition-all duration-300 ${
+						className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 md:py-2 text-[10px] md:text-xs font-bold rounded-md transition-all duration-300 ${
 							activeTab === "work"
 								? "bg-cyan-600 text-white shadow-[0_0_15px_rgba(8,145,178,0.4)]"
 								: "text-gray-500 hover:text-gray-300 hover:bg-white/5"
 						}`}
 					>
-						<FiBriefcase /> CAREER
+						<FiBriefcase className="w-3 h-3" /> CAREER
 					</button>
 					<button
 						onClick={() => setActiveTab("org")}
-						className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 text-xs font-bold rounded-md transition-all duration-300 ${
+						className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 md:py-2 text-[10px] md:text-xs font-bold rounded-md transition-all duration-300 ${
 							activeTab === "org"
 								? "bg-cyan-600 text-white shadow-[0_0_15px_rgba(8,145,178,0.4)]"
 								: "text-gray-500 hover:text-gray-300 hover:bg-white/5"
 						}`}
 					>
-						<FiUsers /> ORG
+						<FiUsers className="w-3 h-3" /> ORG
 					</button>
 				</div>
 			</div>
@@ -160,16 +162,16 @@ export default function ExperienceContent() {
 			{/* Scrollable Content */}
 			<div
 				ref={scrollRef}
-				className="flex-1 overflow-y-auto p-8 custom-scrollbar relative scroll-smooth z-10"
+				className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar relative scroll-smooth z-10"
 			>
 				<div
 					ref={contentRef}
-					className="max-w-4xl mx-auto relative pl-8 md:pl-12 pt-4 pb-20"
+					className="max-w-4xl mx-auto relative pl-6 md:pl-12 pt-4 pb-20"
 				>
 					{/* === DYNAMIC TIMELINE LINE === */}
-					<div className="absolute left-[19px] md:left-[23px] top-0 bottom-0 w-[2px] bg-[#333]" />
+					<div className="absolute left-[15px] md:left-[23px] top-0 bottom-0 w-[2px] bg-[#333]" />
 					<motion.div
-						className="absolute left-[19px] md:left-[23px] top-0 w-[2px] bg-gradient-to-b from-cyan-600 via-purple-600 to-cyan-600 origin-top shadow-[0_0_10px_cyan]"
+						className="absolute left-[15px] md:left-[23px] top-0 w-[2px] bg-gradient-to-b from-cyan-600 via-purple-600 to-cyan-600 origin-top shadow-[0_0_10px_cyan]"
 						style={{ height: "100%", scaleY: scaleY }}
 					/>
 
@@ -194,25 +196,25 @@ export default function ExperienceContent() {
 
 function TimelineItem({ item, index }: { item: Experience; index: number }) {
 	return (
-		<motion.div variants={cardVariants} className="relative pl-8">
+		<motion.div variants={cardVariants} className="relative pl-6 md:pl-8">
 			{/* Timeline Node */}
-			<div className="absolute -left-[18px] md:-left-[14px] top-8 flex items-center justify-center">
+			<div className="absolute -left-[14px] md:-left-[14px] top-8 flex items-center justify-center">
 				<div className="w-5 h-5 rounded-full border border-cyan-500/50 bg-[#0a0a0c] flex items-center justify-center z-10 shadow-[0_0_15px_rgba(8,145,178,0.3)] group-hover:scale-125 transition-transform duration-300">
 					<div className="w-2 h-2 rounded-full bg-cyan-500 group-hover:bg-purple-500 transition-colors" />
 				</div>
-				<div className="absolute left-5 w-8 h-[1px] bg-cyan-500/30 group-hover:bg-cyan-500 transition-colors duration-500" />
+				<div className="absolute left-5 w-6 md:w-8 h-[1px] bg-cyan-500/30 group-hover:bg-cyan-500 transition-colors duration-500" />
 			</div>
 
 			{/* Card */}
 			<CyberCard className="w-full">
-				<div className="p-6 md:p-7 relative z-10">
+				<div className="p-4 md:p-7 relative z-10">
 					{/* Header */}
 					<div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-5">
 						<div>
-							<h3 className="text-xl font-bold text-white mb-2 group-hover:text-cyan-400 transition-colors flex items-center gap-2">
+							<h3 className="text-lg md:text-xl font-bold text-white mb-2 group-hover:text-cyan-400 transition-colors flex items-center gap-2">
 								{item.role}
 							</h3>
-							<div className="flex items-center gap-2 text-sm font-medium text-gray-400">
+							<div className="flex items-center gap-2 text-xs md:text-sm font-medium text-gray-400">
 								<span className="w-2 h-2 rounded-sm bg-purple-500 rotate-45"></span>
 								{item.company}
 							</div>

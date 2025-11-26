@@ -103,34 +103,36 @@ export default function ProjectContent() {
 			<div className="shrink-0 px-6 md:px-10 py-5 border-b border-white/5 bg-[#030303]/90 backdrop-blur-md sticky top-0 z-20 shadow-2xl flex flex-col md:flex-row justify-between items-end gap-6 relative">
 				<div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-50" />
 
-				<div className="flex-1">
-					<div className="flex items-center gap-2 mb-1">
+				<div className="flex-1 w-full md:w-auto">
+					<div className="flex items-center gap-2 mb-2">
 						<FiCpu className="text-purple-500 w-3 h-3" />
 						<span className="text-[10px] font-mono tracking-[0.2em] text-purple-400/80 uppercase">
 							// PROJECT_ARCHIVE
 						</span>
 					</div>
 
-					{/* SCALE UP TITLE */}
-					<div className="text-2xl md:text-3xl font-black text-white tracking-tight flex items-center">
-						<TextType
-							text={[
-								"PROJECT_ARCHIVE",
-								"CREATIVE_LABS",
-								"BUILDING_IDEAS",
-								"DEPLOYING_NOW...",
-							]}
-							typingSpeed={80}
-							deletingSpeed={40}
-							pauseDuration={2000}
-							loop={true}
-							showCursor={true}
-							cursorCharacter="█"
-							cursorClassName="text-purple-500 animate-pulse ml-2"
-						/>
+					{/* TITLE SECTION WITH CONSISTENT HEIGHT */}
+					<div className="h-10 md:h-12 flex items-center overflow-hidden w-full">
+						<div className="text-2xl md:text-4xl font-black text-white tracking-widest flex items-center">
+							<TextType
+								text={[
+									"PROJECT_ARCHIVE",
+									"CREATIVE_LABS",
+									"BUILDING_IDEAS",
+									"DEPLOYING_NOW...",
+								]}
+								typingSpeed={80}
+								deletingSpeed={40}
+								pauseDuration={2000}
+								loop={true}
+								showCursor={true}
+								cursorCharacter="█"
+								cursorClassName="text-purple-500 animate-pulse ml-2"
+							/>
+						</div>
 					</div>
 
-					<p className="text-[10px] text-purple-400/80 font-mono tracking-[0.3em] uppercase mt-1 animate-pulse">
+					<p className="text-[10px] text-purple-400/80 font-mono tracking-[0.3em] uppercase mt-2 animate-pulse truncate">
 						{PROJECT_SUBTITLES[subtitleIndex].replace(
 							"{count}",
 							filteredProjects.length.toString()
@@ -138,10 +140,10 @@ export default function ProjectContent() {
 					</p>
 				</div>
 
-				<div className="flex gap-1 bg-black/60 p-1.5 rounded-lg border border-white/10 shadow-inner">
+				<div className="flex gap-1 bg-black/60 p-1.5 rounded-lg border border-white/10 shadow-inner w-full md:w-auto">
 					<button
 						onClick={() => setFilter("featured")}
-						className={`px-4 py-2 text-[10px] font-bold tracking-wider rounded transition-all duration-300 ${
+						className={`flex-1 md:flex-none px-4 py-3 md:py-2 text-[10px] md:text-xs font-bold tracking-wider rounded transition-all duration-300 ${
 							filter === "featured"
 								? "bg-purple-600 text-white shadow-lg shadow-purple-900/20"
 								: "text-gray-500 hover:text-gray-300 hover:bg-white/5"
@@ -151,7 +153,7 @@ export default function ProjectContent() {
 					</button>
 					<button
 						onClick={() => setFilter("all")}
-						className={`px-4 py-2 text-[10px] font-bold tracking-wider rounded transition-all duration-300 ${
+						className={`flex-1 md:flex-none px-4 py-3 md:py-2 text-[10px] md:text-xs font-bold tracking-wider rounded transition-all duration-300 ${
 							filter === "all"
 								? "bg-purple-600 text-white shadow-lg shadow-purple-900/20"
 								: "text-gray-500 hover:text-gray-300 hover:bg-white/5"
@@ -163,13 +165,13 @@ export default function ProjectContent() {
 			</div>
 
 			{/* Main Grid Content */}
-			<div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-8 custom-scrollbar relative z-10">
+			<div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar relative z-10">
 				<motion.div
 					key={filter}
 					variants={containerVariants}
 					initial="hidden"
 					animate="show"
-					className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-20"
+					className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 pb-20"
 				>
 					{filteredProjects.map((project) => (
 						<ProjectCard
