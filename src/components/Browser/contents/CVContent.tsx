@@ -12,7 +12,7 @@ const CV_SUBTITLES = [
 	"SKILLS_++ // EXPERIENCE_++",
 ];
 
-// Konfigurasi Teks: Kiri selalu Putih (dihapus dari config), Kanan berwarna
+// Konfigurasi Teks
 const TITLES = [
 	{ left: "WRITING", right: "CODE", rightColor: "text-purple-400" },
 	{ left: "WRITING", right: "BUGS", rightColor: "text-red-500" },
@@ -21,17 +21,15 @@ const TITLES = [
 ];
 
 // Komponen Helper: Menganimasikan kata per huruf
-// layout="position" memastikan transisi lebar smooth tanpa menggeser parent secara aneh
+// CATATAN: 'layout' prop DIHAPUS dari sini agar tidak konflik dengan wrapper
 const RotatingWord = ({ text, color }: { text: string; color: string }) => {
 	const characters = text.split("");
 	return (
 		<motion.div
-			layout
 			className={`flex relative items-center ${color} whitespace-pre`}
 			initial="initial"
 			animate="animate"
 			exit="exit"
-			transition={{ duration: 0.25, ease: "easeInOut" }} // Smooth width transition
 		>
 			<motion.div
 				className="flex"
@@ -123,25 +121,37 @@ export default function CVContent() {
 
 					{/* TITLE SECTION */}
 					<div className="h-10 md:h-12 flex items-center overflow-hidden w-full">
-						{/* Hapus 'layout' dari div ini agar posisi start (kiri) terkunci */}
 						<div className="flex flex-row items-baseline gap-x-3 text-2xl md:text-4xl font-black tracking-widest w-full justify-start">
-							{/* BAGIAN KIRI: SELALU PUTIH */}
-							<AnimatePresence mode="popLayout" initial={false}>
-								<RotatingWord
-									key={currentTitle.left}
-									text={currentTitle.left}
-									color="text-white" // Hardcoded Putih
-								/>
-							</AnimatePresence>
+							{/* WRAPPER KIRI (Stabil) */}
+							{/* 'layout' ada di sini, bukan di teks. Wrapper ini tidak pernah hilang. */}
+							<motion.div
+								layout
+								className="relative flex items-center justify-start"
+								transition={{ type: "spring", stiffness: 300, damping: 30 }}
+							>
+								<AnimatePresence mode="popLayout" initial={false}>
+									<RotatingWord
+										key={currentTitle.left}
+										text={currentTitle.left}
+										color="text-white"
+									/>
+								</AnimatePresence>
+							</motion.div>
 
-							{/* BAGIAN KANAN: BERWARNA */}
-							<AnimatePresence mode="popLayout" initial={false}>
-								<RotatingWord
-									key={currentTitle.right}
-									text={currentTitle.right}
-									color={currentTitle.rightColor}
-								/>
-							</AnimatePresence>
+							{/* WRAPPER KANAN (Stabil) */}
+							<motion.div
+								layout
+								className="relative flex items-center justify-start"
+								transition={{ type: "spring", stiffness: 300, damping: 30 }}
+							>
+								<AnimatePresence mode="popLayout" initial={false}>
+									<RotatingWord
+										key={currentTitle.right}
+										text={currentTitle.right}
+										color={currentTitle.rightColor}
+									/>
+								</AnimatePresence>
+							</motion.div>
 						</div>
 					</div>
 
