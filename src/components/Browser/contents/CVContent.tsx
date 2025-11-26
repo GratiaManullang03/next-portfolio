@@ -121,37 +121,28 @@ export default function CVContent() {
 
 					{/* TITLE SECTION */}
 					<div className="h-10 md:h-12 flex items-center overflow-hidden w-full">
-						<div className="flex flex-row items-baseline gap-x-3 text-2xl md:text-4xl font-black tracking-widest w-full justify-start">
-							{/* WRAPPER KIRI (Stabil) */}
-							{/* 'layout' ada di sini, bukan di teks. Wrapper ini tidak pernah hilang. */}
-							<motion.div
-								layout
-								className="relative flex items-center justify-start"
-								transition={{ type: "spring", stiffness: 300, damping: 30 }}
-							>
-								<AnimatePresence mode="popLayout" initial={false}>
+						<div className="flex flex-row items-baseline gap-x-3 text-2xl md:text-4xl font-black tracking-widest">
+							{/* WRAPPER KIRI */}
+							<div className="relative inline-block">
+								<AnimatePresence mode="wait" initial={false}>
 									<RotatingWord
 										key={currentTitle.left}
 										text={currentTitle.left}
 										color="text-white"
 									/>
 								</AnimatePresence>
-							</motion.div>
+							</div>
 
-							{/* WRAPPER KANAN (Stabil) */}
-							<motion.div
-								layout
-								className="relative flex items-center justify-start"
-								transition={{ type: "spring", stiffness: 300, damping: 30 }}
-							>
-								<AnimatePresence mode="popLayout" initial={false}>
+							{/* WRAPPER KANAN */}
+							<div className="relative inline-block">
+								<AnimatePresence mode="wait" initial={false}>
 									<RotatingWord
 										key={currentTitle.right}
 										text={currentTitle.right}
 										color={currentTitle.rightColor}
 									/>
 								</AnimatePresence>
-							</motion.div>
+							</div>
 						</div>
 					</div>
 
