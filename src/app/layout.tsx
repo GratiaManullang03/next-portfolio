@@ -5,6 +5,8 @@ import './globals.css';
 const firaCode = Fira_Code({
     subsets: ['latin'],
     variable: '--font-fira-code',
+    display: 'swap',
+    fallback: ['monospace'],
 });
 
 export const metadata: Metadata = {

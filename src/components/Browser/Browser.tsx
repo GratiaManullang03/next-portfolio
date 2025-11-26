@@ -5,6 +5,7 @@ import CVContent from "./contents/CVContent";
 import ProjectContent from "./contents/ProjectContent";
 import ExperienceContent from "./contents/ExperienceContent";
 import AchievementsContent from "./contents/AchievementsContent";
+import SkillsContent from "./contents/SkillsContent";
 
 interface BrowserProps {
 	command: string;
@@ -157,6 +158,8 @@ export default function Browser({ command, onClose }: BrowserProps) {
 				return <ExperienceContent />;
 			case "achievements":
 				return <AchievementsContent />;
+			case "skills":
+				return <SkillsContent />;
 			default:
 				return (
 					<div className="flex-grow p-[40px] overflow-y-auto h-full">
