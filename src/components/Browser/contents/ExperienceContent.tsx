@@ -8,6 +8,7 @@ import {
 	useScroll,
 	useTransform,
 } from "framer-motion";
+import { useLenis } from "@/hooks/useLenis";
 import {
 	FiBriefcase,
 	FiUsers,
@@ -66,6 +67,14 @@ export default function ExperienceContent() {
 
 	const scrollRef = useRef<HTMLDivElement>(null);
 	const contentRef = useRef<HTMLDivElement>(null);
+
+	// Initialize Lenis for smooth scrolling
+	useLenis(scrollRef, {
+		duration: 1.2,
+		easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+		smoothWheel: true,
+		smoothTouch: false,
+	});
 
 	const { scrollYProgress } = useScroll({
 		container: scrollRef,

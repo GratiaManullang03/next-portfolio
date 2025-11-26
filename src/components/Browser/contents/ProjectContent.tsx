@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
+import { useLenis } from "@/hooks/useLenis";
 import {
 	FiGithub,
 	FiExternalLink,
@@ -62,6 +63,23 @@ export default function ProjectContent() {
 	const [filter, setFilter] = useState<"all" | "featured">("featured");
 	const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 	const [subtitleIndex, setSubtitleIndex] = useState(0);
+	const scrollContainerRef = useRef<HTMLDivElement>(null);
+	const modalScrollRef = useRef<HTMLDivElement>(null);
+
+	// Initialize Lenis for main grid scroll
+	useLenis(scrollContainerRef, {
+		duration: 1.2,
+		easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+		smoothWheel: true,
+		smoothTouch: false,
+	});
+
+	// Initialize Lenis for modal scroll
+	useLenis(modalScrollRef, {
+		duration: 1.0,
+		smoothWheel: true,
+		smoothTouch: false,
+	});
 
 	useEffect(() => {
 		const interval = setInterval(() => {
@@ -145,7 +163,7 @@ export default function ProjectContent() {
 			</div>
 
 			{/* Main Grid Content */}
-			<div className="flex-1 overflow-y-auto p-8 custom-scrollbar relative z-10">
+			<div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-8 custom-scrollbar relative z-10">
 				<motion.div
 					key={filter}
 					variants={containerVariants}
@@ -229,7 +247,7 @@ export default function ProjectContent() {
 								</div>
 							</div>
 
-							<div className="flex-1 overflow-y-auto custom-scrollbar bg-[#0a0a0c]">
+							<div ref={modalScrollRef} className="flex-1 overflow-y-auto custom-scrollbar bg-[#0a0a0c]">
 								<div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
 									<div className="md:col-span-2 space-y-6">
 										<div>

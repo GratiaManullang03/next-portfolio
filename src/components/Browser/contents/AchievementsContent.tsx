@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLenis } from "@/hooks/useLenis";
 import {
 	FiAward,
 	FiCheckCircle,
@@ -40,6 +41,25 @@ export default function AchievementsContent() {
 	const [selectedId, setSelectedId] = useState<string>(
 		achievementsData[0]?.id || ""
 	);
+
+	const leftScrollRef = useRef<HTMLDivElement>(null);
+	const rightScrollRef = useRef<HTMLDivElement>(null);
+
+	// Initialize Lenis for left sidebar scroll
+	useLenis(leftScrollRef, {
+		duration: 1.2,
+		easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+		smoothWheel: true,
+		smoothTouch: false,
+	});
+
+	// Initialize Lenis for right content scroll
+	useLenis(rightScrollRef, {
+		duration: 1.2,
+		easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+		smoothWheel: true,
+		smoothTouch: false,
+	});
 
 	// Filter Logic
 	const filteredData =
@@ -133,7 +153,7 @@ export default function AchievementsContent() {
 			{/* --- CONTENT LAYOUT --- */}
 			<div className="flex-1 overflow-hidden flex flex-col lg:flex-row relative z-10">
 				{/* --- LEFT: SCROLLABLE LIST --- */}
-				<div className="w-full lg:w-[420px] overflow-y-auto custom-scrollbar border-r border-white/5 bg-[#050505]/50 flex flex-col backdrop-blur-sm z-20">
+				<div ref={leftScrollRef} className="w-full lg:w-[420px] overflow-y-auto custom-scrollbar border-r border-white/5 bg-[#050505]/50 flex flex-col backdrop-blur-sm z-20">
 					<div className="p-4 md:p-6 space-y-2">
 						<AnimatePresence mode="popLayout">
 							{filteredData.map((item, index) => (
@@ -171,7 +191,7 @@ export default function AchievementsContent() {
 					</div>
 
 					{/* Scrollable Content Container */}
-					<div className="flex-1 overflow-y-auto custom-scrollbar relative z-30 p-10 flex items-start justify-center">
+					<div ref={rightScrollRef} className="flex-1 overflow-y-auto custom-scrollbar relative z-30 p-10 flex items-start justify-center">
 						<div className="w-full max-w-4xl min-h-full flex flex-col items-center justify-center py-10">
 							<AnimatePresence mode="wait">
 								{activeItem && (
