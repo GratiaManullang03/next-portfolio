@@ -1,6 +1,6 @@
 import dynamic from "next/dynamic";
 import { FiCpu } from "react-icons/fi";
-import ShuffleText from "@/components/ui/ShuffleText";
+import { useState, useEffect } from "react";
 
 const SkillsGlobe = dynamic(() => import("./SkillsGlobe"), {
 	ssr: false,
@@ -11,13 +11,6 @@ const SkillsGlobe = dynamic(() => import("./SkillsGlobe"), {
 	),
 });
 
-const TITLES = [
-	"TECH_STACK",
-	"SKILLS_MATRIX",
-	"ARSENAL_LOADED",
-	"TECH_SPHERE",
-];
-
 const SUBTITLES = [
 	"ORBITAL_TECH_SYSTEM",
 	"WEAPONS_LOADED // READY",
@@ -27,6 +20,15 @@ const SUBTITLES = [
 ];
 
 const SkillsContent = () => {
+	const [subtitleIndex, setSubtitleIndex] = useState(0);
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setSubtitleIndex((prev) => (prev + 1) % SUBTITLES.length);
+		}, 3000);
+		return () => clearInterval(interval);
+	}, []);
+
 	return (
 		<div className="h-full flex flex-col bg-black text-gray-300 font-mono overflow-hidden relative">
 			{/* --- CINEMATIC AMBIENCE --- */}
@@ -39,7 +41,7 @@ const SkillsContent = () => {
 			<div className="shrink-0 px-6 md:px-10 py-5 border-b border-white/5 bg-black/90 backdrop-blur-md z-20 shadow-2xl relative">
 				<div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-green-500/50 to-transparent opacity-50" />
 
-				<div className="flex items-center gap-2 mb-2">
+				<div className="flex items-center gap-1.5 mb-2">
 					<FiCpu className="text-green-500 w-3 h-3" />
 					<span className="text-[10px] font-mono tracking-[0.2em] text-green-400/80 uppercase">
 						// TECH_ARSENAL
@@ -47,19 +49,17 @@ const SkillsContent = () => {
 				</div>
 
 				{/* TITLE SECTION WITH CONSISTENT HEIGHT */}
-				<div className="h-10 md:h-12 flex items-center overflow-hidden w-full">
-					<ShuffleText
-						texts={TITLES}
-						className="text-2xl md:text-4xl font-black text-white tracking-widest uppercase font-mono"
-						interval={2500}
-						duration={0.65}
-						shuffleTimes={6}
-						scrambleChars="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
-						stagger={0.04}
-						subtitles={SUBTITLES}
-						subtitleClassName="text-[10px] text-green-400/80 font-mono tracking-[0.3em] uppercase mt-2 animate-pulse"
-					/>
+				<div className="h-10 md:h-12 flex items-center overflow-hidden">
+					<h1 className="text-2xl md:text-4xl font-black text-white tracking-widest uppercase font-mono">
+						<span style={{ color: "#22c55e", textShadow: "0 0 20px rgba(34, 197, 94, 0.5)" }}>
+							TECH STACK
+						</span>
+					</h1>
 				</div>
+
+				<p className="text-[10px] text-green-400/80 font-mono tracking-[0.3em] uppercase mt-2 animate-pulse">
+					{SUBTITLES[subtitleIndex]}
+				</p>
 			</div>
 
 			{/* --- MAIN CONTENT (Globe) --- */}
