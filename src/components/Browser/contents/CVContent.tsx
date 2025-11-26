@@ -15,7 +15,6 @@ const CV_SUBTITLES = [
 export default function CVContent() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [subtitleIndex, setSubtitleIndex] = useState(0);
-	const [animKey, setAnimKey] = useState(0);
 	const pdfUrl = "/files/CV-Felix-Gratia-Mangatur-Manullang.pdf";
 
 	useEffect(() => {
@@ -23,14 +22,6 @@ export default function CVContent() {
 			setSubtitleIndex((prev) => (prev + 1) % CV_SUBTITLES.length);
 		}, 3000);
 		return () => clearInterval(interval);
-	}, []);
-
-	// Trigger continuous re-animation every 5 seconds
-	useEffect(() => {
-		const animInterval = setInterval(() => {
-			setAnimKey((prev) => prev + 1);
-		}, 5000);
-		return () => clearInterval(animInterval);
 	}, []);
 
 	const handleDownload = () => {
@@ -66,14 +57,19 @@ export default function CVContent() {
 						<span>MY</span>
 						<div className="px-2 sm:px-2 md:px-3 py-1 bg-gradient-to-r from-purple-600 via-violet-500 to-fuchsia-500 text-white rounded-lg overflow-hidden inline-flex items-center justify-center relative shadow-lg shadow-purple-500/50">
 							<div className="absolute inset-0 bg-white/10 mix-blend-overlay"></div>
+							{/* RotatingText akan berjalan otomatis tanpa di-reset oleh parent */}
 							<RotatingText
-								key={animKey}
 								texts={["CV", "RESUME", "PROFILE", "JOURNEY", "STORY"]}
 								className="relative z-10"
 								rotationInterval={2500}
 								staggerDuration={0.025}
 								staggerFrom="last"
-								transition={{ type: "spring", damping: 30, stiffness: 400, duration: 0.5 }}
+								transition={{
+									type: "spring",
+									damping: 30,
+									stiffness: 400,
+									duration: 0.5,
+								}}
 							/>
 						</div>
 					</div>
