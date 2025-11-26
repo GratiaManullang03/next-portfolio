@@ -24,6 +24,14 @@ const TITLES = [
 	"LEGACY_SYSTEM",
 ];
 
+const SUBTITLES = [
+	"VALIDATING_CREDENTIALS...",
+	"AWARDS_UNLOCKED // CERTIFIED",
+	"PROOF_OF_ACHIEVEMENT",
+	"AUTHORIZED_EXCELLENCE",
+	"LEGACY_ESTABLISHED",
+];
+
 // --- MAIN COMPONENT ---
 export default function AchievementsContent() {
 	const [filter, setFilter] = useState<"all" | "award" | "certification">(
@@ -83,6 +91,8 @@ export default function AchievementsContent() {
 						shuffleTimes={6}
 						scrambleChars="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
 						stagger={0.04}
+						subtitles={SUBTITLES}
+						subtitleClassName="text-[10px] text-emerald-400/80 font-mono tracking-[0.3em] uppercase mt-1 animate-pulse"
 					/>
 				</div>
 

@@ -11,6 +11,8 @@ interface ShuffleTextProps {
 	scrambleChars?: string;
 	shuffleTimes?: number;
 	stagger?: number;
+	subtitles?: string[];
+	subtitleClassName?: string;
 }
 
 export default function ShuffleText({
@@ -21,9 +23,12 @@ export default function ShuffleText({
 	scrambleChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_",
 	shuffleTimes = 6,
 	stagger = 0.04,
+	subtitles,
+	subtitleClassName = "text-[10px] text-emerald-400/80 font-mono tracking-[0.3em] uppercase mt-1 animate-pulse",
 }: ShuffleTextProps) {
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [isShuffling, setIsShuffling] = useState(false);
+	const [subtitleIndex, setSubtitleIndex] = useState(0);
 	const prevTextRef = useRef(texts[0]);
 
 	const currentText = texts[currentIndex];
@@ -49,6 +54,17 @@ export default function ShuffleText({
 
 		return () => clearTimeout(timeout);
 	}, [currentIndex, duration]);
+
+	// Subtitle cycling (if subtitles provided)
+	useEffect(() => {
+		if (!subtitles || subtitles.length === 0) return;
+
+		const subtitleInterval = setInterval(() => {
+			setSubtitleIndex((prev) => (prev + 1) % subtitles.length);
+		}, 3000);
+
+		return () => clearInterval(subtitleInterval);
+	}, [subtitles]);
 
 	const maxLen = Math.max(currentText.length, prevText.length);
 
@@ -173,9 +189,15 @@ export default function ShuffleText({
 					);
 				})}
 			</div>
-			<p className="text-[10px] text-emerald-400/80 font-mono tracking-[0.3em] uppercase mt-1">
-				{isShuffling ? "DECRYPTING_SECURE_DATA..." : "ACCESS_GRANTED"}
-			</p>
+			{subtitles && subtitles.length > 0 ? (
+				<p className={subtitleClassName}>
+					{subtitles[subtitleIndex]}
+				</p>
+			) : (
+				<p className="text-[10px] text-emerald-400/80 font-mono tracking-[0.3em] uppercase mt-1">
+					{isShuffling ? "DECRYPTING_SECURE_DATA..." : "ACCESS_GRANTED"}
+				</p>
+			)}
 		</div>
 	);
 }
