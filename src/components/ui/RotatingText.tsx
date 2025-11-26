@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useCallback, useEffect, useState, useRef } from "react";
 
 interface RotatingTextProps {
 	texts: string[];
@@ -20,19 +19,15 @@ export default function RotatingText({
 	rotationInterval = 2000,
 	staggerDuration = 0.025,
 	staggerFrom = "last",
-	transition = { type: "spring", damping: 30, stiffness: 400 },
 	loop = true,
 	auto = true,
 }: RotatingTextProps) {
 	const [currentTextIndex, setCurrentTextIndex] = useState(0);
-	const [mounted, setMounted] = useState(false);
-
-	useEffect(() => {
-		setMounted(true);
-	}, []);
+	const [animationState, setAnimationState] = useState<'initial' | 'enter' | 'exit'>('initial');
+	const containerRef = useRef<HTMLSpanElement>(null);
 
 	const currentText = texts[currentTextIndex];
-	const words = currentText.split(" ");
+	const characters = Array.from(currentText);
 
 	const getStaggerDelay = useCallback(
 		(index: number, total: number) => {
@@ -51,76 +46,90 @@ export default function RotatingText({
 		[staggerFrom, staggerDuration]
 	);
 
-	const next = useCallback(() => {
-		const nextIndex =
-			currentTextIndex === texts.length - 1
-				? loop
-					? 0
-					: currentTextIndex
-				: currentTextIndex + 1;
-		if (nextIndex !== currentTextIndex) {
-			setCurrentTextIndex(nextIndex);
-		}
-	}, [currentTextIndex, texts.length, loop]);
-
+	// Trigger enter animation on mount and when text changes
 	useEffect(() => {
-		if (!auto) return;
-		const intervalId = setInterval(next, rotationInterval);
-		return () => clearInterval(intervalId);
-	}, [next, rotationInterval, auto]);
+		// Start with enter animation
+		const enterTimeout = setTimeout(() => {
+			setAnimationState('enter');
+		}, 50);
 
-	if (!mounted) {
-		return <span className={className}>{texts[0]}</span>;
-	}
+		if (!auto) return () => clearTimeout(enterTimeout);
+
+		// Calculate max delay for stagger effect
+		const maxStaggerDelay = (characters.length - 1) * staggerDuration * 1000;
+
+		// Schedule exit animation after rotationInterval
+		const exitTimeout = setTimeout(() => {
+			setAnimationState('exit');
+		}, rotationInterval);
+
+		// Schedule initial state reset (before text change)
+		const resetTimeout = setTimeout(() => {
+			setAnimationState('initial');
+		}, rotationInterval + 500 + maxStaggerDelay);
+
+		// Schedule text change (after reset to initial)
+		const changeTextTimeout = setTimeout(() => {
+			const nextIndex = currentTextIndex === texts.length - 1
+				? (loop ? 0 : currentTextIndex)
+				: currentTextIndex + 1;
+
+			if (nextIndex !== currentTextIndex) {
+				setCurrentTextIndex(nextIndex);
+			}
+		}, rotationInterval + 500 + maxStaggerDelay + 100);
+
+		return () => {
+			clearTimeout(enterTimeout);
+			clearTimeout(exitTimeout);
+			clearTimeout(resetTimeout);
+			clearTimeout(changeTextTimeout);
+		};
+	}, [currentTextIndex, texts.length, loop, auto, rotationInterval, characters.length, staggerDuration]);
 
 	return (
-		<span className={`inline-flex flex-wrap ${className}`}>
-			<AnimatePresence mode="wait">
-				<motion.span
-					key={currentTextIndex}
-					className="inline-flex flex-wrap"
-					aria-hidden="true"
-				>
-					{words.map((word, wordIndex) => {
-						const characters = Array.from(word);
-						const totalChars = currentText.replace(/\s/g, "").length;
-						const previousCharsCount = words
-							.slice(0, wordIndex)
-							.reduce((sum, w) => sum + w.length, 0);
+		<span ref={containerRef} className={`inline-flex ${className}`}>
+			{characters.map((char, charIndex) => {
+				const enterDelay = getStaggerDelay(charIndex, characters.length);
+				// For exit, reverse the stagger (first char exits first)
+				const exitDelay = getStaggerDelay(characters.length - 1 - charIndex, characters.length);
 
-						return (
-							<span key={wordIndex} className="inline-flex">
-								{characters.map((char, charIndex) => (
-									<span
-										key={charIndex}
-										className="inline-block overflow-hidden"
-										style={{ paddingBottom: "0.1em" }}
-									>
-										<motion.span
-											initial={{ y: "100%" }}
-											animate={{ y: 0 }}
-											exit={{ y: "-120%" }}
-											transition={{
-												...transition,
-												delay: getStaggerDelay(
-													previousCharsCount + charIndex,
-													totalChars
-												),
-											}}
-											className="inline-block"
-										>
-											{char}
-										</motion.span>
-									</span>
-								))}
-								{wordIndex < words.length - 1 && (
-									<span className="inline-block">&nbsp;</span>
-								)}
-							</span>
-						);
-					})}
-				</motion.span>
-			</AnimatePresence>
+				// Determine transform and transition based on animation state
+				let transform = "translateY(100%)"; // initial: from bottom
+				let transitionDelay = enterDelay;
+
+				if (animationState === 'enter') {
+					transform = "translateY(0)"; // enter: center
+					transitionDelay = enterDelay;
+				} else if (animationState === 'exit') {
+					transform = "translateY(-120%)"; // exit: to top
+					transitionDelay = exitDelay;
+				} else if (animationState === 'initial') {
+					// No delay for initial state to snap back immediately
+					transitionDelay = 0;
+				}
+
+				return (
+					<span
+						key={`${currentTextIndex}-${charIndex}`}
+						className="inline-block overflow-hidden"
+						style={{ lineHeight: 1 }}
+					>
+						<span
+							className="inline-block"
+							style={{
+								transform,
+								opacity: animationState === 'enter' ? 1 : 0,
+								transition: animationState === 'initial'
+									? 'none'
+									: `transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) ${transitionDelay}s, opacity 0.4s ease ${transitionDelay}s`,
+							}}
+						>
+							{char === " " ? "\u00A0" : char}
+						</span>
+					</span>
+				);
+			})}
 		</span>
 	);
 }

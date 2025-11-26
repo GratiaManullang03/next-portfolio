@@ -62,14 +62,21 @@ export default function CVContent() {
 						</span>
 					</div>
 
-					<RotatingText
-						key={animKey}
-						texts={["CURRICULUM_VITAE"]}
-						className="text-2xl md:text-3xl font-black text-white tracking-widest"
-						rotationInterval={999999}
-						staggerDuration={0.03}
-						staggerFrom="last"
-					/>
+					<div className="flex items-center gap-3 text-2xl md:text-3xl font-black text-white tracking-widest">
+						<span>MY</span>
+						<div className="px-2 sm:px-2 md:px-3 py-1 bg-gradient-to-r from-purple-600 via-violet-500 to-fuchsia-500 text-white rounded-lg overflow-hidden inline-flex items-center justify-center relative shadow-lg shadow-purple-500/50">
+							<div className="absolute inset-0 bg-white/10 mix-blend-overlay"></div>
+							<RotatingText
+								key={animKey}
+								texts={["CV", "RESUME", "PROFILE", "JOURNEY", "STORY"]}
+								className="relative z-10"
+								rotationInterval={2500}
+								staggerDuration={0.025}
+								staggerFrom="last"
+								transition={{ type: "spring", damping: 30, stiffness: 400, duration: 0.5 }}
+							/>
+						</div>
+					</div>
 
 					<p className="text-[10px] text-white/70 font-mono tracking-[0.3em] uppercase mt-1 animate-pulse">
 						{CV_SUBTITLES[subtitleIndex]}
