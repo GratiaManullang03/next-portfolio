@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { FiDownload, FiExternalLink, FiFileText } from "react-icons/fi";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 
 const CV_SUBTITLES = [
 	"RESUME_DATA // READ_ONLY_MODE",
@@ -121,29 +121,39 @@ export default function CVContent() {
 
 					{/* TITLE SECTION */}
 					<div className="h-10 md:h-12 flex items-center overflow-hidden w-full">
-						<div className="flex flex-row items-baseline gap-x-3 text-2xl md:text-4xl font-black tracking-widest">
-							{/* WRAPPER KIRI */}
-							<div className="relative inline-block">
-								<AnimatePresence mode="wait" initial={false}>
-									<RotatingWord
-										key={currentTitle.left}
-										text={currentTitle.left}
-										color="text-white"
-									/>
-								</AnimatePresence>
-							</div>
+						<LayoutGroup>
+							<div className="flex flex-row items-baseline gap-x-3 text-2xl md:text-4xl font-black tracking-widest">
+								{/* WRAPPER KIRI */}
+								<motion.div
+									layout
+									transition={{ type: "spring", stiffness: 400, damping: 30 }}
+									className="relative inline-block"
+								>
+									<AnimatePresence mode="wait" initial={false}>
+										<RotatingWord
+											key={currentTitle.left}
+											text={currentTitle.left}
+											color="text-white"
+										/>
+									</AnimatePresence>
+								</motion.div>
 
-							{/* WRAPPER KANAN */}
-							<div className="relative inline-block">
-								<AnimatePresence mode="wait" initial={false}>
-									<RotatingWord
-										key={currentTitle.right}
-										text={currentTitle.right}
-										color={currentTitle.rightColor}
-									/>
-								</AnimatePresence>
+								{/* WRAPPER KANAN */}
+								<motion.div
+									layout
+									transition={{ type: "spring", stiffness: 400, damping: 30 }}
+									className="relative inline-block"
+								>
+									<AnimatePresence mode="wait" initial={false}>
+										<RotatingWord
+											key={currentTitle.right}
+											text={currentTitle.right}
+											color={currentTitle.rightColor}
+										/>
+									</AnimatePresence>
+								</motion.div>
 							</div>
-						</div>
+						</LayoutGroup>
 					</div>
 
 					<p className="text-[10px] text-white/50 font-mono tracking-[0.3em] uppercase mt-2 animate-pulse truncate">
