@@ -52,41 +52,25 @@ export default function ShuffleText({
 
 	const maxLen = Math.max(currentText.length, prevText.length);
 
-	// Generate film strip: pure old chars → pure target chars (NO RANDOM!)
-	const characterData = useMemo(() => {
-		const rolls = Math.max(1, Math.floor(shuffleTimes));
-		const halfRolls = Math.floor(rolls / 2);
-
-		return Array.from({ length: maxLen }).map((_, index) => {
-			const targetChar = currentText[index] || "";
-			const oldChar = prevText[index] || "";
-
-			// Film strip: first half = old char, second half = target char
-			const intermediates: string[] = [];
-			for (let i = 0; i < rolls; i++) {
-				if (i < halfRolls) {
-					intermediates.push(oldChar || " ");
-				} else {
-					intermediates.push(targetChar || " ");
-				}
+	// Generate scrambled characters once per transition
+	const scrambledFrames = useMemo(() => {
+		const frames: string[][] = [];
+		for (let i = 0; i < shuffleTimes; i++) {
+			const frame: string[] = [];
+			for (let j = 0; j < maxLen; j++) {
+				frame.push(scrambleChars[Math.floor(Math.random() * scrambleChars.length)]);
 			}
-
-			return {
-				targetChar,
-				oldChar,
-				intermediates,
-			};
-		});
-	}, [currentIndex, currentText, prevText, maxLen, shuffleTimes]);
+			frames.push(frame);
+		}
+		return frames;
+	}, [currentIndex, maxLen, scrambleChars, shuffleTimes]);
 
 	const getDelay = (index: number) => {
-		// CRITICAL FIX: EVEN positions animate FIRST, ODD positions SECOND
+		// EVEN positions slide first, ODD positions slide second
 		const isEven = index % 2 === 0;
 		if (isEven) {
-			// Even: start immediately with stagger
 			return Math.floor(index / 2) * stagger;
 		} else {
-			// Odd: wait for duration (stage 1 complete), then start
 			return duration + (Math.floor(index / 2) * stagger);
 		}
 	};
@@ -94,17 +78,15 @@ export default function ShuffleText({
 	return (
 		<div className="relative inline-block">
 			<div className={`${className} inline-flex`}>
-				{characterData.map(({ targetChar, intermediates }, index) => {
-					// Handle empty characters
-					if (targetChar === "" && intermediates[0] === " ") {
-						return null;
-					}
+				{Array.from({ length: maxLen }).map((_, index) => {
+					const targetChar = currentText[index] || "";
+					const oldChar = prevText[index] || "";
 
 					// Handle spaces
 					if (targetChar === " ") {
 						return (
 							<span
-								key={`${currentIndex}-${index}`}
+								key={`pos-${index}`}
 								className="inline-block"
 								style={{ width: "0.3em" }}
 							>
@@ -113,53 +95,49 @@ export default function ShuffleText({
 						);
 					}
 
+					// Handle empty (text shortening)
+					if (targetChar === "" && oldChar !== "") {
+						return null;
+					}
+
+					// Build the film strip: [targetChar, ...scrambled chars (reversed), oldChar]
+					const filmStrip = [targetChar, ...scrambledFrames.map(frame => frame[index]).reverse(), oldChar];
+					const stripWidth = filmStrip.length;
+
 					return (
 						<span
-							key={`${currentIndex}-${index}`}
-							className="inline-block overflow-hidden align-baseline"
+							key={`pos-${index}`}
+							className="inline-block overflow-hidden"
 							style={{
 								width: "1ch",
+								height: "1em",
 							}}
 						>
+							{/* Film strip container that slides horizontally */}
 							<motion.span
+								key={`${currentIndex}-${index}`}
 								className="inline-flex"
-								initial={{ x: `${-100 * (intermediates.length + 1)}%` }}
+								initial={{ x: -(stripWidth - 1) + "ch" }}
 								animate={{ x: 0 }}
 								transition={{
-									duration: duration,
 									delay: getDelay(index),
-									ease: [0.23, 1, 0.32, 1],
-								}}
-								style={{
-									whiteSpace: "nowrap",
+									duration: 0.5,
+									ease: "easeInOut",
 								}}
 							>
-								{intermediates.map((char, i) => (
+								{filmStrip.map((char, i) => (
 									<span
 										key={i}
-										className="inline-block"
-										style={{
-											width: "1ch",
-											textAlign: "center",
-										}}
+										className="inline-block text-center"
+										style={{ width: "1ch" }}
 									>
 										{char}
 									</span>
 								))}
-								<span
-									className="inline-block"
-									style={{
-										width: "1ch",
-										textAlign: "center",
-									}}
-								>
-									{targetChar}
-								</span>
 							</motion.span>
 						</span>
 					);
 				})}
-				<span className="animate-pulse text-emerald-500">_</span>
 			</div>
 			<p className="text-[10px] text-emerald-400/80 font-mono tracking-[0.3em] uppercase mt-1">
 				{isShuffling ? "DECRYPTING_SECURE_DATA..." : "ACCESS_GRANTED"}
