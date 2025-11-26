@@ -1,6 +1,7 @@
 import dynamic from "next/dynamic";
 import { FiCpu } from "react-icons/fi";
 import { useState, useEffect } from "react";
+import GlitchText from "@/components/ui/GlitchText"; // Import komponen baru
 
 const SkillsGlobe = dynamic(() => import("./SkillsGlobe"), {
 	ssr: false,
@@ -51,9 +52,12 @@ const SkillsContent = () => {
 				{/* TITLE SECTION WITH CONSISTENT HEIGHT */}
 				<div className="h-10 md:h-12 flex items-center overflow-hidden">
 					<h1 className="text-2xl md:text-4xl font-black text-white tracking-widest uppercase font-mono">
-						<span style={{ color: "#22c55e", textShadow: "0 0 20px rgba(34, 197, 94, 0.5)" }}>
-							TECH STACK
-						</span>
+						{/* Menggunakan GlitchText di sini */}
+						<GlitchText
+							text="TECH STACK"
+							speed={0.8}
+							className="text-[#22c55e]"
+						/>
 					</h1>
 				</div>
 

@@ -74,7 +74,9 @@ export default function ShuffleText({
 		for (let i = 0; i < shuffleTimes; i++) {
 			const frame: string[] = [];
 			for (let j = 0; j < maxLen; j++) {
-				frame.push(scrambleChars[Math.floor(Math.random() * scrambleChars.length)]);
+				frame.push(
+					scrambleChars[Math.floor(Math.random() * scrambleChars.length)]
+				);
 			}
 			frames.push(frame);
 		}
@@ -87,7 +89,7 @@ export default function ShuffleText({
 		if (isEven) {
 			return Math.floor(index / 2) * stagger;
 		} else {
-			return duration + (Math.floor(index / 2) * stagger);
+			return duration + Math.floor(index / 2) * stagger;
 		}
 	};
 
@@ -113,7 +115,11 @@ export default function ShuffleText({
 
 					// Handle empty (text shortening) - animate it sliding out
 					if (targetChar === "" && oldChar !== "") {
-						const filmStrip = ["", ...scrambledFrames.map(frame => frame[index]).reverse(), oldChar];
+						const filmStrip = [
+							"",
+							...scrambledFrames.map((frame) => frame[index]).reverse(),
+							oldChar,
+						];
 						const stripWidth = filmStrip.length;
 
 						return (
@@ -151,7 +157,11 @@ export default function ShuffleText({
 					}
 
 					// Build the film strip: [targetChar, ...scrambled chars (reversed), oldChar]
-					const filmStrip = [targetChar, ...scrambledFrames.map(frame => frame[index]).reverse(), oldChar];
+					const filmStrip = [
+						targetChar,
+						...scrambledFrames.map((frame) => frame[index]).reverse(),
+						oldChar,
+					];
 					const stripWidth = filmStrip.length;
 
 					return (
@@ -190,9 +200,7 @@ export default function ShuffleText({
 				})}
 			</div>
 			{subtitles && subtitles.length > 0 ? (
-				<p className={subtitleClassName}>
-					{subtitles[subtitleIndex]}
-				</p>
+				<p className={subtitleClassName}>{subtitles[subtitleIndex]}</p>
 			) : (
 				<p className="text-[10px] text-emerald-400/80 font-mono tracking-[0.3em] uppercase mt-1">
 					{isShuffling ? "DECRYPTING_SECURE_DATA..." : "ACCESS_GRANTED"}

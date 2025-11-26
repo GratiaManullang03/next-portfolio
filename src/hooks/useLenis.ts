@@ -7,7 +7,7 @@ interface UseLenisOptions {
 	orientation?: "vertical" | "horizontal";
 	gestureOrientation?: "vertical" | "horizontal" | "both";
 	smoothWheel?: boolean;
-	smoothTouch?: boolean;
+	syncTouch?: boolean;
 	wheelMultiplier?: number;
 	touchMultiplier?: number;
 	infinite?: boolean;
@@ -31,7 +31,7 @@ export function useLenis(
 			orientation: options.orientation ?? "vertical",
 			gestureOrientation: options.gestureOrientation ?? "vertical",
 			smoothWheel: options.smoothWheel ?? true,
-			smoothTouch: options.smoothTouch ?? false,
+			syncTouch: options.syncTouch ?? false,
 			wheelMultiplier: options.wheelMultiplier ?? 1,
 			touchMultiplier: options.touchMultiplier ?? 2,
 			infinite: options.infinite ?? false,

@@ -50,7 +50,7 @@ export default function AchievementsContent() {
 		duration: 1.2,
 		easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
 		smoothWheel: true,
-		smoothTouch: false,
+		syncTouch: false,
 	});
 
 	// Initialize Lenis for right content scroll
@@ -58,7 +58,7 @@ export default function AchievementsContent() {
 		duration: 1.2,
 		easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
 		smoothWheel: true,
-		smoothTouch: false,
+		syncTouch: false,
 	});
 
 	// Filter Logic
@@ -146,7 +146,9 @@ export default function AchievementsContent() {
 							<span className="relative z-10 flex items-center justify-center gap-2">
 								{tab.key === "all" && <FiFilter className="w-3 h-3" />}
 								{tab.key === "award" && <FiAward className="w-3 h-3" />}
-								{tab.key === "certification" && <FiFileText className="w-3 h-3" />}
+								{tab.key === "certification" && (
+									<FiFileText className="w-3 h-3" />
+								)}
 								{tab.label}
 							</span>
 						</button>
@@ -157,7 +159,10 @@ export default function AchievementsContent() {
 			{/* --- CONTENT LAYOUT --- */}
 			<div className="flex-1 overflow-hidden flex flex-col lg:flex-row relative z-10">
 				{/* --- LEFT: SCROLLABLE LIST --- */}
-				<div ref={leftScrollRef} className="w-full lg:w-[420px] overflow-y-auto custom-scrollbar border-b lg:border-r lg:border-b-0 border-white/5 bg-[#050505]/50 flex flex-col backdrop-blur-sm z-20">
+				<div
+					ref={leftScrollRef}
+					className="w-full lg:w-[420px] overflow-y-auto custom-scrollbar border-b lg:border-r lg:border-b-0 border-white/5 bg-[#050505]/50 flex flex-col backdrop-blur-sm z-20"
+				>
 					<div className="p-3 md:p-6 space-y-2">
 						<AnimatePresence mode="popLayout">
 							{filteredData.map((item, index) => (
@@ -195,7 +200,10 @@ export default function AchievementsContent() {
 					</div>
 
 					{/* Scrollable Content Container */}
-					<div ref={rightScrollRef} className="flex-1 overflow-y-auto custom-scrollbar relative z-30 p-6 md:p-10 flex items-start justify-center">
+					<div
+						ref={rightScrollRef}
+						className="flex-1 overflow-y-auto custom-scrollbar relative z-30 p-6 md:p-10 flex items-start justify-center"
+					>
 						<div className="w-full max-w-4xl min-h-full flex flex-col items-center justify-center py-10">
 							<AnimatePresence mode="wait">
 								{activeItem && (
@@ -446,7 +454,8 @@ function StageProjection({ item }: { item: Achievement }) {
 						className="group relative px-6 md:px-10 py-3 md:py-4 bg-white text-black font-black tracking-wider uppercase rounded-sm overflow-hidden transition-transform hover:-translate-y-1 text-xs md:text-base"
 					>
 						<span className="relative z-10 flex items-center gap-2">
-							<FiCheckCircle className="w-4 h-4 md:w-5 md:h-5" /> View Credential
+							<FiCheckCircle className="w-4 h-4 md:w-5 md:h-5" /> View
+							Credential
 						</span>
 						{/* Hover Fill Effect */}
 						<div

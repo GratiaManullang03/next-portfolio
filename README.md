@@ -53,4 +53,3 @@ src/
 ## Commands
 
 Type `/command` in the terminal to see available commands.
-

@@ -71,14 +71,14 @@ export default function ProjectContent() {
 		duration: 1.2,
 		easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
 		smoothWheel: true,
-		smoothTouch: false,
+		syncTouch: false,
 	});
 
 	// Initialize Lenis for modal scroll
 	useLenis(modalScrollRef, {
 		duration: 1.0,
 		smoothWheel: true,
-		smoothTouch: false,
+		syncTouch: false,
 	});
 
 	useEffect(() => {
@@ -165,7 +165,10 @@ export default function ProjectContent() {
 			</div>
 
 			{/* Main Grid Content */}
-			<div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar relative z-10">
+			<div
+				ref={scrollContainerRef}
+				className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar relative z-10"
+			>
 				<motion.div
 					key={filter}
 					variants={containerVariants}
@@ -249,7 +252,10 @@ export default function ProjectContent() {
 								</div>
 							</div>
 
-							<div ref={modalScrollRef} className="flex-1 overflow-y-auto custom-scrollbar bg-[#0a0a0c]">
+							<div
+								ref={modalScrollRef}
+								className="flex-1 overflow-y-auto custom-scrollbar bg-[#0a0a0c]"
+							>
 								<div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
 									<div className="md:col-span-2 space-y-6">
 										<div>

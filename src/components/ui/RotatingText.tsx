@@ -23,7 +23,9 @@ export default function RotatingText({
 	auto = true,
 }: RotatingTextProps) {
 	const [currentTextIndex, setCurrentTextIndex] = useState(0);
-	const [animationState, setAnimationState] = useState<'initial' | 'enter' | 'exit'>('initial');
+	const [animationState, setAnimationState] = useState<
+		"initial" | "enter" | "exit"
+	>("initial");
 	const containerRef = useRef<HTMLSpanElement>(null);
 
 	const currentText = texts[currentTextIndex];
@@ -50,7 +52,7 @@ export default function RotatingText({
 	useEffect(() => {
 		// Start with enter animation
 		const enterTimeout = setTimeout(() => {
-			setAnimationState('enter');
+			setAnimationState("enter");
 		}, 50);
 
 		if (!auto) return () => clearTimeout(enterTimeout);
@@ -60,19 +62,22 @@ export default function RotatingText({
 
 		// Schedule exit animation after rotationInterval
 		const exitTimeout = setTimeout(() => {
-			setAnimationState('exit');
+			setAnimationState("exit");
 		}, rotationInterval);
 
 		// Schedule initial state reset (before text change)
 		const resetTimeout = setTimeout(() => {
-			setAnimationState('initial');
+			setAnimationState("initial");
 		}, rotationInterval + 500 + maxStaggerDelay);
 
 		// Schedule text change (after reset to initial)
 		const changeTextTimeout = setTimeout(() => {
-			const nextIndex = currentTextIndex === texts.length - 1
-				? (loop ? 0 : currentTextIndex)
-				: currentTextIndex + 1;
+			const nextIndex =
+				currentTextIndex === texts.length - 1
+					? loop
+						? 0
+						: currentTextIndex
+					: currentTextIndex + 1;
 
 			if (nextIndex !== currentTextIndex) {
 				setCurrentTextIndex(nextIndex);
@@ -85,26 +90,37 @@ export default function RotatingText({
 			clearTimeout(resetTimeout);
 			clearTimeout(changeTextTimeout);
 		};
-	}, [currentTextIndex, texts.length, loop, auto, rotationInterval, characters.length, staggerDuration]);
+	}, [
+		currentTextIndex,
+		texts.length,
+		loop,
+		auto,
+		rotationInterval,
+		characters.length,
+		staggerDuration,
+	]);
 
 	return (
 		<span ref={containerRef} className={`inline-flex ${className}`}>
 			{characters.map((char, charIndex) => {
 				const enterDelay = getStaggerDelay(charIndex, characters.length);
 				// For exit, reverse the stagger (first char exits first)
-				const exitDelay = getStaggerDelay(characters.length - 1 - charIndex, characters.length);
+				const exitDelay = getStaggerDelay(
+					characters.length - 1 - charIndex,
+					characters.length
+				);
 
 				// Determine transform and transition based on animation state
 				let transform = "translateY(100%)"; // initial: from bottom
 				let transitionDelay = enterDelay;
 
-				if (animationState === 'enter') {
+				if (animationState === "enter") {
 					transform = "translateY(0)"; // enter: center
 					transitionDelay = enterDelay;
-				} else if (animationState === 'exit') {
+				} else if (animationState === "exit") {
 					transform = "translateY(-120%)"; // exit: to top
 					transitionDelay = exitDelay;
-				} else if (animationState === 'initial') {
+				} else if (animationState === "initial") {
 					// No delay for initial state to snap back immediately
 					transitionDelay = 0;
 				}
@@ -119,10 +135,11 @@ export default function RotatingText({
 							className="inline-block"
 							style={{
 								transform,
-								opacity: animationState === 'enter' ? 1 : 0,
-								transition: animationState === 'initial'
-									? 'none'
-									: `transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) ${transitionDelay}s, opacity 0.4s ease ${transitionDelay}s`,
+								opacity: animationState === "enter" ? 1 : 0,
+								transition:
+									animationState === "initial"
+										? "none"
+										: `transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) ${transitionDelay}s, opacity 0.4s ease ${transitionDelay}s`,
 							}}
 						>
 							{char === " " ? "\u00A0" : char}
