@@ -1,0 +1,228 @@
+{
+	"bot_config": {
+		"name": "Graxya AI Assistant",
+		"personality": "intelligent, enthusiastic, professional, and slightly witty",
+		"language": "English",
+		"max_response_length": 600,
+		"temperature": 0.6,
+		"rules": [
+			"You are the virtual assistant for the portfolio of Felix Gratia Mangatur Manullang (goes by Gratia or Graxya).",
+			"Explain Gratia's technical expertise (Backend, System Architecture) with confidence but humility.",
+			"If referring to his name, use 'Gratia' for professional contexts or 'Graxya' as his developer brand name.",
+			"If asked about job availability, direct them to contact via email or LinkedIn.",
+			"Do not provide sensitive personal information (detailed home address, passwords, env secrets)."
+		]
+	},
+	"portfolio_data": {
+		"owner_name": "Felix Gratia Mangatur Manullang",
+		"nickname": "Gratia",
+		"stage_name": "Graxya",
+		"domain": "graxya.is-a.dev",
+		"description": "Gratia (Graxya) is a High-performing Backend Developer with a stellar 3.94 GPA and a background in Supply Chain Management. He specializes in architecting complex, scalable, and secure systems using Python (FastAPI), Go, and Clean Architecture. Experienced in building multi-tenant SaaS platforms, RAG-based AI solutions, and enterprise-grade systems.",
+		"services": [
+			{
+				"name": "ATABOT 2.0 - Universal Adaptive Business Intelligence",
+				"description": "A flagship AI project utilizing RAG (Retrieval-Augmented Generation) and pgvector for automated database analysis.",
+				"features": [
+					"Zero-config schema discovery: AI understands database structure without manual setup.",
+					"Real-time data synchronization via PostgreSQL triggers.",
+					"Hybrid Search (SQL + Vector) for high accuracy.",
+					"Lightweight Dockerized architecture (< 500MB)."
+				],
+				"price": "Personal Project / Advanced AI Portfolio"
+			},
+			{
+				"name": "ATLAS - Authentication & Authorization Service",
+				"description": "A standalone SSO (Single Sign-On) service designed for enterprise-level security and multi-tenant architecture.",
+				"features": [
+					"Absolute tenant isolation using Schema-per-Tenant architecture.",
+					"High security with JWT Rolling Tokens & AES-256 Response Encryption.",
+					"Granular RBAC down to application permission levels.",
+					"Serves as the authentication backbone for multiple internal projects."
+				],
+				"price": "Core Infrastructure Portfolio"
+			},
+			{
+				"name": "AVENTORY - Inventory Management System",
+				"description": "An end-to-end Warehouse Management System (WMS) combining supply chain business logic with modern software engineering.",
+				"features": [
+					"Multi-warehouse stock management with atomic validation.",
+					"Purchase Order (PO) flow with multi-level approval.",
+					"Immutable audit trails to prevent stock data manipulation.",
+					"Built with Clean Architecture for long-term maintainability."
+				],
+				"price": "Complex System Portfolio"
+			},
+			{
+				"name": "ATAPOS - Point of Sale System",
+				"description": "An API-first POS system supporting multi-tenancy and integrated digital payments.",
+				"features": [
+					"Midtrans Snap integration (QRIS, E-Wallet, CC).",
+					"Dual Authentication: Passwordless (Customer) & SSO (Staff).",
+					"Table management, product variants, and automated promotions.",
+					"Automatic cash rounding algorithms."
+				],
+				"price": "SaaS Backend Portfolio"
+			},
+			{
+				"name": "Internship @ Alfagift (PT Global Loyalty Indonesia)",
+				"description": "Professional experience developing backend features for a major retail application.",
+				"features": [
+					"Developed internal web interface features using FastAPI & PostgreSQL.",
+					"Implemented multi-level approval systems and shipment tracking.",
+					"Refactored legacy code into modular and reusable components.",
+					"Collaborated with QA and Frontend teams in an Agile environment."
+				],
+				"price": "Professional Experience (Feb 2025 - Present)"
+			},
+			{
+				"name": "Internship @ PT Samanasoft Inovasi Persada",
+				"description": "Experience developing AI solutions for the healthcare sector.",
+				"features": [
+					"Developed an AI Chatbot for hospital booking systems.",
+					"Created Machine Learning models for medication dosage recommendations.",
+					"Continuous software improvement and module development."
+				],
+				"price": "Professional Experience (2023 - 2024)"
+			},
+			{
+				"name": "ATABOT Lite - Landing Page Bot",
+				"description": "A lightweight chatbot with hybrid search and session memory, designed for automated customer service.",
+				"features": [
+					"Context injection via JSON knowledge base.",
+					"Automatic conversation recording to database for analytics.",
+					"Built-in rate limiting and security middleware."
+				],
+				"price": "AI Service Portfolio"
+			},
+			{
+				"name": "Atask - Task Management API",
+				"description": "A collaborative project management API similar to Jira/Trello but with custom data structures.",
+				"features": [
+					"Auto-generated task codes & sub-task hierarchy.",
+					"Automated daily email notifications (Background Jobs).",
+					"File attachment integration via Cloudinary."
+				],
+				"price": "Productivity Tool Portfolio"
+			},
+			{
+				"name": "HRIS Attendance System",
+				"description": "A secure attendance system with location and device validation.",
+				"features": [
+					"Geofencing using Haversine Formula.",
+					"Rolling QR Codes & Anti-replay protection.",
+					"Strict session management (One active session per day)."
+				],
+				"price": "System Security Portfolio"
+			},
+			{
+				"name": "Automation Suite (Email, WA, Lead Gen)",
+				"description": "A collection of automation tools for marketing and outreach.",
+				"features": [
+					"Email Blast: Async processing of thousands of emails with tracking pixels.",
+					"WA Blaster: WhatsApp Web automation with personalized messaging.",
+					"Lead Gen: Secure and efficient Google Maps & Search scraper."
+				],
+				"price": "Automation Portfolio"
+			},
+			{
+				"name": "Utility APIs (Location & Assets)",
+				"description": "Specialized microservices for specific utility functions.",
+				"features": [
+					"Location Autocomplete: Async API wrapping Geoapify for real-time city search.",
+					"Compro Assets: CMS API for managing company assets with RBAC protection."
+				],
+				"price": "Microservices Portfolio"
+			}
+		],
+		"technology_stack": {
+			"languages": [
+				"Python (Expert)",
+				"Go (Golang)",
+				"TypeScript",
+				"C#",
+				"SQL"
+			],
+			"backend_frameworks": [
+				"FastAPI (Advanced)",
+				"Gin",
+				"Laravel",
+				"Flask",
+				"ASP.NET"
+			],
+			"databases": [
+				"PostgreSQL (Complex Queries)",
+				"Redis",
+				"MongoDB",
+				"pgvector"
+			],
+			"infrastructure": [
+				"Docker",
+				"Docker Compose",
+				"Nats Jetstream",
+				"GitHub Actions",
+				"Linux"
+			],
+			"security": [
+				"JWT Rolling Tokens",
+				"OAuth2",
+				"AES Encryption",
+				"RBAC",
+				"SSO Implementation"
+			],
+			"integrations": [
+				"OpenAI/Poe API",
+				"Midtrans Payment",
+				"Cloudinary",
+				"Geoapify",
+				"SerpAPI"
+			],
+			"mobile_web": ["Flutter", "React", "Next.js", "Tailwind CSS"]
+		},
+		"faq": [
+			{
+				"question": "Is Gratia open to job offers?",
+				"answer": "Yes, Gratia is open to Backend Engineer, Software Architect, or Fullstack Developer positions. Please contact him via email or LinkedIn."
+			},
+			{
+				"question": "What is Graxya's main technical specialization?",
+				"answer": "Gratia (Graxya) specializes in Python (FastAPI) and Go for building scalable, secure, and high-performance backend systems. He also possesses deep knowledge of Supply Chain Management, making him unique in translating logistics business needs into code."
+			},
+			{
+				"question": "Does Gratia have professional work experience?",
+				"answer": "Absolutely. Gratia has internship experience at Alfagift (PT Global Loyalty Indonesia) and PT Samanasoft Inovasi Persada, handling real-world projects ranging from internal corporate systems to medical AI."
+			},
+			{
+				"question": "What is Gratia's approach to software development?",
+				"answer": "Gratia applies Clean Architecture, prioritizes security (Security-first mindset), and ensures code is modular and reusable."
+			},
+			{
+				"question": "What is Gratia's GPA?",
+				"answer": "Gratia maintains exceptional academic performance with a 3.94/4.00 GPA at Polytechnic Multimedia Nusantara."
+			}
+		],
+		"contacts": {
+			"email": "gratiamanullang03@gmail.com",
+			"phone": "+62823-6313-4083",
+			"website": "https://graxya.is-a.dev/",
+			"linkedin": "Available on Website",
+			"github": "Available on Website"
+		},
+		"additional_info": {
+			"education": "Polytechnic Multimedia Nusantara (Digital Commerce & Supply Chain)",
+			"gpa": "3.94 / 4.00",
+			"leadership": [
+				"President of E-Commerce Logistics Student Association",
+				"Chairman of ECLIVAL 2024"
+			],
+			"achievements": [
+				"1st Runner Up Podcast Competition (PELITA)",
+				"Scholarship Awardee (Quipper Campus)"
+			],
+			"certifications": [
+				"Samsung Innovation Campus Batch 5",
+				"International Training Centre"
+			]
+		}
+	}
+}
