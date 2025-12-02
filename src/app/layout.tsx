@@ -1,12 +1,20 @@
 import type { Metadata } from "next";
-import { Fira_Code } from "next/font/google";
+import { Fira_Code, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
 const firaCode = Fira_Code({
 	subsets: ["latin"],
 	variable: "--font-fira-code",
-	display: "swap",
+	display: "block",
 	fallback: ["monospace"],
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+	subsets: ["latin"],
+	weight: ["500", "600"],
+	variable: "--font-ibm-plex-mono",
+	display: "block",
+	fallback: ["Courier New", "monospace"],
 });
 
 export const metadata: Metadata = {
@@ -22,7 +30,7 @@ export default function RootLayout({
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body
-				className={`${firaCode.variable} antialiased font-mono bg-[#1e1e1e] text-white overflow-hidden`}
+				className={`${firaCode.variable} ${ibmPlexMono.variable} antialiased font-mono bg-[#1e1e1e] text-white overflow-hidden`}
 				suppressHydrationWarning
 			>
 				{children}

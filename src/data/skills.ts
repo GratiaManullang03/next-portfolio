@@ -43,7 +43,7 @@ export const skillsData: Skill[] = [
 	},
 	{
 		name: "R",
-		icon: "/assets/icons/r-lang.webp",
+		icon: "/assets/icons/r.webp",
 		category: "Programming",
 	},
 
@@ -114,7 +114,7 @@ export const skillsData: Skill[] = [
 	},
 	{
 		name: "ASP.NET",
-		icon: "/assets/icons/dotnet.webp",
+		icon: "/assets/icons/aspnet.webp",
 		category: "Backend",
 	},
 	{

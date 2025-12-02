@@ -494,6 +494,7 @@ interface ASCIITextProps {
 	textColor?: string;
 	planeBaseHeight?: number;
 	enableWaves?: boolean;
+	onReady?: () => void;
 }
 
 export default function ASCIIText({
@@ -503,9 +504,11 @@ export default function ASCIIText({
 	textColor = "#a855f7",
 	planeBaseHeight = 8,
 	enableWaves = true,
+	onReady,
 }: ASCIITextProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const asciiRef = useRef<CanvAscii | null>(null);
+	const readyCalledRef = useRef(false);
 
 	useEffect(() => {
 		if (!containerRef.current) return;
@@ -537,6 +540,19 @@ export default function ASCIIText({
 						);
 						asciiRef.current.load();
 
+						// Signal that ASCII is ready after first render
+						if (onReady && !readyCalledRef.current) {
+							// Wait for 2 animation frames to ensure rendering is complete
+							requestAnimationFrame(() => {
+								requestAnimationFrame(() => {
+									if (onReady) {
+										onReady();
+										readyCalledRef.current = true;
+									}
+								});
+							});
+						}
+
 						observer.disconnect();
 					}
 				},
@@ -567,6 +583,19 @@ export default function ASCIIText({
 			height
 		);
 		asciiRef.current.load();
+
+		// Signal that ASCII is ready after first render
+		if (onReady && !readyCalledRef.current) {
+			// Wait for 2 animation frames to ensure rendering is complete
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					if (onReady) {
+						onReady();
+						readyCalledRef.current = true;
+					}
+				});
+			});
+		}
 
 		const ro = new ResizeObserver((entries) => {
 			if (!entries[0] || !asciiRef.current) return;
@@ -603,8 +632,6 @@ export default function ASCIIText({
 			}}
 		>
 			<style>{`
-                @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&display=swap');
-
                 .ascii-text-container canvas {
                     position: absolute;
                     left: 0;

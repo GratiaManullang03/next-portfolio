@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 // @ts-ignore - Ignore type check if declaration file is missing locally
 import Globe, { GlobeMethods } from "react-globe.gl";
 import { techIcons } from "@/utils/techIcons";
@@ -24,7 +24,6 @@ const SkillsGlobe = () => {
 		return techIcons.map(
 			(tech: { name: string; icon: string }, index: number) => {
 				const y = 1 - (index / (techIcons.length - 1)) * 2;
-				const radius = Math.sqrt(1 - y * y);
 				const theta = phi * index;
 
 				return {
@@ -103,7 +102,8 @@ const SkillsGlobe = () => {
 	return (
 		<div
 			ref={containerRef}
-			className="w-full h-full flex items-center justify-center bg-black cursor-move relative"
+			className="w-full h-full flex items-center justify-center bg-black relative"
+			style={{ cursor: "grab" }}
 		>
 			{/* Background Grid Decoration (Optional subtle background) */}
 			<div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-green-900/10 via-black to-black pointer-events-none" />
@@ -134,25 +134,28 @@ const SkillsGlobe = () => {
 					htmlElementsData={skillsData}
 					htmlElement={(d: any) => {
 						const el = document.createElement("div");
-						// Responsive Size
-						const size = isMobile ? "35px" : "55px";
+						// Responsive Size - lebih kecil di idle state
+						const idleSize = isMobile ? "30px" : "40px";
+						const hoverSize = isMobile ? "45px" : "65px";
 
-						el.style.width = size;
-						el.style.height = size;
+						el.style.width = idleSize;
+						el.style.height = idleSize;
 						el.style.display = "flex";
 						el.style.alignItems = "center";
 						el.style.justifyContent = "center";
 						el.style.position = "relative";
 
 						// Glassmorphism Icon Container
-						el.style.background = "rgba(0, 20, 0, 0.6)"; // Darker semi-transparent
+						el.style.background = "rgba(0, 20, 0, 0.6)";
 						el.style.backdropFilter = "blur(4px)";
 						el.style.borderRadius = "50%";
-						el.style.border = "1px solid rgba(74, 222, 128, 0.3)"; // Subtle border
-						el.style.boxShadow = "0 0 15px rgba(34, 197, 94, 0.1)"; // Faint glow
+						el.style.border = "1px solid rgba(74, 222, 128, 0.3)";
+						el.style.boxShadow = "0 0 15px rgba(34, 197, 94, 0.1)";
 						el.style.cursor = "pointer";
+						el.style.pointerEvents = "auto";
+						el.style.zIndex = "1";
 						el.style.transition =
-							"all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)"; // Bouncy transition
+							"all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
 
 						const img = document.createElement("img");
 						img.src = d.icon;
@@ -163,38 +166,86 @@ const SkillsGlobe = () => {
 						img.style.top = "50%";
 						img.style.left = "50%";
 						img.style.transform = "translate(-50%, -50%)";
-						// Opsional: Bikin icon jadi agak putih/grayscale biar seragam
-						// img.style.filter = "grayscale(100%) brightness(1.5)";
+						// BLACK & WHITE by default - warna asli pas hover
+						img.style.filter = "grayscale(100%) brightness(0.8)";
+						img.style.transition = "filter 0.3s ease";
+						img.style.pointerEvents = "none"; // Prevent img from blocking hover
 
 						el.appendChild(img);
 
-						// Interaction
-						el.onmouseenter = () => {
-							el.style.transform = "scale(1.3)";
-							el.style.borderColor = "#4ade80"; // Brighter green
-							el.style.boxShadow = "0 0 20px rgba(74, 222, 128, 0.6)";
-							el.style.zIndex = "10";
-							el.style.background = "rgba(0, 30, 0, 0.9)";
+						// Label nama skill (hidden by default)
+						const label = document.createElement("div");
+						label.textContent = d.name;
+						label.style.position = "absolute";
+						label.style.bottom = "-25px";
+						label.style.left = "50%";
+						label.style.transform = "translateX(-50%)";
+						label.style.whiteSpace = "nowrap";
+						label.style.fontSize = isMobile ? "9px" : "11px";
+						label.style.fontWeight = "600";
+						label.style.color = "#4ade80";
+						label.style.background = "rgba(0, 0, 0, 0.9)";
+						label.style.padding = "3px 8px";
+						label.style.borderRadius = "4px";
+						label.style.border = "1px solid rgba(74, 222, 128, 0.5)";
+						label.style.opacity = "0";
+						label.style.pointerEvents = "none";
+						label.style.transition = "opacity 0.3s ease, bottom 0.3s ease";
+						label.style.fontFamily = "monospace";
+						label.style.letterSpacing = "0.5px";
+						label.style.zIndex = "100";
 
-							// Pause rotation on hover (optional)
+						el.appendChild(label);
+
+						// Interaction
+						el.onmouseenter = (e) => {
+							e.stopPropagation();
+
+							// Icon container zoom
+							el.style.width = hoverSize;
+							el.style.height = hoverSize;
+							el.style.borderColor = "#4ade80";
+							el.style.boxShadow = "0 0 25px rgba(74, 222, 128, 0.8)";
+							el.style.zIndex = "999";
+							el.style.background = "rgba(0, 30, 0, 0.95)";
+							el.style.cursor = "pointer";
+
+							// Kembalikan warna asli icon
+							img.style.filter = "grayscale(0%) brightness(1)";
+
+							// Show label
+							label.style.opacity = "1";
+							label.style.bottom = "-30px";
+
+							// Pause rotation on hover
 							if (globeEl.current) {
 								globeEl.current.controls().autoRotate = false;
 							}
 						};
 
-						el.onmouseleave = () => {
-							el.style.transform = "scale(1)";
+						el.onmouseleave = (e) => {
+							e.stopPropagation();
+
+							// Reset ke idle size
+							el.style.width = idleSize;
+							el.style.height = idleSize;
 							el.style.borderColor = "rgba(74, 222, 128, 0.3)";
 							el.style.boxShadow = "0 0 15px rgba(34, 197, 94, 0.1)";
 							el.style.zIndex = "1";
 							el.style.background = "rgba(0, 20, 0, 0.6)";
+
+							// Back to grayscale
+							img.style.filter = "grayscale(100%) brightness(0.8)";
+
+							// Hide label
+							label.style.opacity = "0";
+							label.style.bottom = "-25px";
 
 							if (globeEl.current) {
 								globeEl.current.controls().autoRotate = true;
 							}
 						};
 
-						el.title = d.name;
 						return el;
 					}}
 				/>

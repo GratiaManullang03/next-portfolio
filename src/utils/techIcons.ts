@@ -1,53 +1,37 @@
 // src/utils/techIcons.ts
+import { skillsData } from "@/data/skills";
 
-// Map nama teknologi dari data ke file icon di public/assets/icons
+// Build iconMap from skills.ts data + additional mappings for backward compatibility
 const iconMap: Record<string, string> = {
-	React: "reactjs.webp",
-	"Next.js": "next.svg",
-	TypeScript: "typescript.webp",
+	// Additional aliases for backward compatibility
 	"Tailwind CSS": "tailwind.webp",
 	TailwindCSS: "tailwind.webp",
 	Vite: "vite.svg",
-	Laravel: "laravel.webp",
 	PHP: "php.webp",
-	MySQL: "mysql.webp",
-	Bootstrap: "bootstrap.webp",
-	Go: "golang.webp",
 	"Go (Golang)": "golang.webp",
-	Redis: "redis.webp",
-	PostgreSQL: "postgresql.webp",
-	Docker: "docker.webp",
-	Python: "python.webp",
-	Flutter: "flutter.webp",
-	Dart: "dart.webp",
-	MongoDB: "mongodb.webp",
-	Firebase: "firebase.webp",
-	"C#": "csharp.webp",
 	"ASP.NET": "aspnet.webp",
-	"C++": "c++.webp",
-	Odoo: "odoo.webp",
-	Figma: "figma.webp",
-	Gin: "gin.webp",
-	Git: "git.webp",
 	"NATS JetStream": "nats.webp",
 	k6: "k6.webp",
-	Swagger: "swagger.webp",
 	SketchUp: "sketchup.webp",
 	FlexSim: "flexsim.webp",
 	"IBM SPSS": "ibm-spss.webp",
-	R: "r.webp",
-	"Hugging Face": "huggingface.webp",
 	"HTML/CSS": "html5.webp",
-	JavaScript: "javascript.webp",
 	jQuery: "jquery.webp",
 	SweetAlert2: "javascript.webp",
 };
 
-// [NEW] Export ini yang dicari sama SkillsGlobe.tsx
-// Kita convert object di atas jadi Array of Objects
-export const techIcons = Object.entries(iconMap).map(([name, path]) => ({
-	name,
-	icon: path.endsWith(".svg") ? `/${path}` : `/assets/icons/${path}`,
+// Add all skills from skillsData to iconMap
+skillsData.forEach((skill) => {
+	// Extract just the filename from the full path
+	const filename = skill.icon.split("/").pop() || skill.icon;
+	iconMap[skill.name] = filename;
+});
+
+// Export techIcons directly from skillsData to ensure all skills are included
+export const techIcons = skillsData.map((skill) => ({
+	name: skill.name,
+	icon: skill.icon,
+	category: skill.category,
 }));
 
 export const getTechIcon = (techName: string): string | null => {

@@ -13,6 +13,7 @@ import CommandOutput, {
 import Browser from "@/components/Browser/Browser";
 import Preloader from "@/components/Preloader";
 import Background from "@/components/Background";
+import { LoadingProvider } from "@/contexts/LoadingContext";
 
 interface CommandEntry {
 	command: string;
@@ -22,6 +23,7 @@ interface CommandEntry {
 export default function Home() {
 	const [commands, setCommands] = useState<CommandEntry[]>([]);
 	const [browserCommand, setBrowserCommand] = useState<string | null>(null);
+	const [showTerminal, setShowTerminal] = useState(false);
 	const scrollRef = useRef<HTMLDivElement>(null);
 	const commandIdRef = useRef(0);
 
@@ -59,9 +61,9 @@ export default function Home() {
 	}, [commands]);
 
 	return (
-		<>
+		<LoadingProvider>
 			<Background />
-			<Preloader />
+			<Preloader onLoadingComplete={() => setShowTerminal(true)} />
 
 			{/* Browser Overlay */}
 			<AnimatePresence>
@@ -79,9 +81,12 @@ export default function Home() {
 
 			<motion.div
 				initial={{ scale: 0.8, opacity: 0 }}
-				animate={{ scale: 1, opacity: 1 }}
+				animate={
+					showTerminal
+						? { scale: 1, opacity: 1 }
+						: { scale: 0.8, opacity: 0 }
+				}
 				transition={{
-					delay: 3.5,
 					duration: 0.8,
 					ease: [0.16, 1, 0.3, 1],
 				}}
@@ -116,6 +121,6 @@ export default function Home() {
 					</div>
 				</TerminalContainer>
 			</motion.div>
-		</>
+		</LoadingProvider>
 	);
 }

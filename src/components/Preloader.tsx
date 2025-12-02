@@ -4,10 +4,29 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import DecryptedText from "./ui/DecryptedText";
 import ScrambleText from "./ui/ScrambleText";
+import { useFontLoaded } from "@/hooks/useFontLoaded";
+import { useLoading } from "@/contexts/LoadingContext";
 
-export default function Preloader() {
+interface PreloaderProps {
+	onLoadingComplete?: () => void;
+}
+
+export default function Preloader({ onLoadingComplete }: PreloaderProps = {}) {
 	const [isLoading, setIsLoading] = useState(true);
 	const [showText, setShowText] = useState(false);
+	const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+
+	// Check if critical fonts are loaded
+	const fontsLoaded = useFontLoaded(["IBM Plex Mono", "Fira Code"]);
+
+	// Check if terminal/ASCII is ready to render
+	const { isTerminalReady } = useLoading();
+
+	// Calculate loading progress based on actual conditions
+	const loadingProgress =
+		(minTimeElapsed ? 33 : 0) +
+		(fontsLoaded ? 33 : 0) +
+		(isTerminalReady ? 34 : 0);
 
 	useEffect(() => {
 		// Start decrypt animation after a short delay
@@ -15,16 +34,29 @@ export default function Preloader() {
 			setShowText(true);
 		}, 500);
 
-		// End preloader after animation completes
-		const endTimer = setTimeout(() => {
-			setIsLoading(false);
-		}, 3500);
+		// Minimum loading time (smooth UX, not too fast)
+		const minTimer = setTimeout(() => {
+			setMinTimeElapsed(true);
+		}, 1500);
 
 		return () => {
 			clearTimeout(textTimer);
-			clearTimeout(endTimer);
+			clearTimeout(minTimer);
 		};
 	}, []);
+
+	// Only hide preloader when ALL conditions are met
+	useEffect(() => {
+		if (minTimeElapsed && fontsLoaded && isTerminalReady) {
+			// Small delay to ensure everything is painted
+			const finalDelay = setTimeout(() => {
+				setIsLoading(false);
+				onLoadingComplete?.();
+			}, 100);
+
+			return () => clearTimeout(finalDelay);
+		}
+	}, [minTimeElapsed, fontsLoaded, isTerminalReady, onLoadingComplete]);
 
 	return (
 		<AnimatePresence>
@@ -81,11 +113,11 @@ export default function Preloader() {
 								{/* Loading bar */}
 								<div className="w-64 md:w-80 h-1 bg-[#1a1a1a] rounded-full overflow-hidden">
 									<motion.div
-										initial={{ width: 0 }}
-										animate={{ width: "100%" }}
+										initial={{ width: "0%" }}
+										animate={{ width: `${loadingProgress}%` }}
 										transition={{
-											duration: 2.5,
-											ease: "easeInOut",
+											duration: 0.3,
+											ease: "easeOut",
 										}}
 										className="h-full bg-gradient-to-r from-[#06b6d4] via-[#a855f7] to-[#f472b6]"
 									/>
