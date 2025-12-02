@@ -101,16 +101,8 @@ export default function ChatContent() {
 	const streamBufferRef = useRef<string>("");
 	const activeMessageIdRef = useRef<string | null>(null);
 
-	const [sessionId] = useState(() => {
-		if (typeof window !== "undefined") {
-			const stored = sessionStorage.getItem("chat_session_id");
-			if (stored) return stored;
-			const newId = generateSessionId();
-			sessionStorage.setItem("chat_session_id", newId);
-			return newId;
-		}
-		return generateSessionId();
-	});
+	// Generate new session ID on every refresh (tidak pakai sessionStorage)
+	const [sessionId] = useState(() => generateSessionId());
 
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
@@ -143,9 +135,26 @@ export default function ChatContent() {
 		return () => clearInterval(interval);
 	}, []);
 
-	// --- TYPING EFFECT LOOP ---
-	// Ini adalah jantung dari efek typing halus.
-	// Kita cek apakah ada isi di buffer yang belum ditampilkan di pesan terakhir.
+	// Ref untuk typo simulation
+	const typoStateRef = useRef<{
+		shouldTypo: boolean;
+		typoPosition: number;
+		typoChar: string;
+		typoInserted: boolean;
+		pauseCount: number;
+		backspaceCount: number;
+		initialized: boolean;
+	}>({
+		shouldTypo: false,
+		typoPosition: -1,
+		typoChar: "",
+		typoInserted: false,
+		pauseCount: 0,
+		backspaceCount: 0,
+		initialized: false,
+	});
+
+	// --- TYPING EFFECT LOOP dengan Human-like typo ---
 	useEffect(() => {
 		let intervalId: NodeJS.Timeout;
 
@@ -161,31 +170,113 @@ export default function ChatContent() {
 						const currentContent = updatedMessages[msgIndex].content;
 						const targetContent = streamBufferRef.current;
 
-						// Jika panjang konten yang ditampilkan < buffer, tambah 1-3 karakter
+						// Initialize typo once when we have enough content
+						if (
+							!typoStateRef.current.initialized &&
+							targetContent.length > 30 &&
+							currentContent.length < 10
+						) {
+							// 80% chance ada typo (increase from 50%)
+							const shouldHaveTypo = Math.random() > 0.2;
+							if (shouldHaveTypo) {
+								// Typo position: antara 30% - 50% dari total panjang
+								const typoPos = Math.floor(
+									targetContent.length * (0.3 + Math.random() * 0.2)
+								);
+								// Random typo character
+								const typoChars = "qwertyuiopasdfghjklzxcvbnm";
+								const typoChar =
+									typoChars[Math.floor(Math.random() * typoChars.length)];
+
+								typoStateRef.current = {
+									shouldTypo: true,
+									typoPosition: typoPos,
+									typoChar,
+									typoInserted: false,
+									pauseCount: 0,
+									backspaceCount: 0,
+									initialized: true,
+								};
+							} else {
+								typoStateRef.current.initialized = true;
+							}
+						}
+
+						const typoState = typoStateRef.current;
+
+						// State 1: Normal typing sampai typo position
+						if (
+							typoState.shouldTypo &&
+							!typoState.typoInserted &&
+							currentContent.length === typoState.typoPosition
+						) {
+							// Insert typo character
+							updatedMessages[msgIndex] = {
+								...updatedMessages[msgIndex],
+								content: currentContent + typoState.typoChar,
+							};
+							typoState.typoInserted = true;
+							return updatedMessages;
+						}
+
+						// State 2: Pause after typo (cursor stays visible - biar keliatan typo-nya)
+						if (
+							typoState.shouldTypo &&
+							typoState.typoInserted &&
+							typoState.pauseCount < 3 &&
+							typoState.backspaceCount === 0
+						) {
+							typoState.pauseCount++;
+							return prevMessages; // Don't change content, just pause
+						}
+
+						// State 3: Backspace the typo (visible with cursor)
+						if (
+							typoState.shouldTypo &&
+							typoState.typoInserted &&
+							typoState.pauseCount >= 3 &&
+							typoState.backspaceCount === 0
+						) {
+							updatedMessages[msgIndex] = {
+								...updatedMessages[msgIndex],
+								content: currentContent.slice(0, -1),
+							};
+							typoState.backspaceCount = 1;
+							typoState.shouldTypo = false; // Done with typo
+							return updatedMessages;
+						}
+
+						// State 4: Normal typing
 						if (currentContent.length < targetContent.length) {
-							// Ambil chunk kecil (2 char) agar typing terasa cepat tapi smooth
-							const nextChunk = targetContent.slice(
-								currentContent.length,
-								currentContent.length + 2
-							);
+							// Human-like: 1 char at a time (slower)
+							const nextChar = targetContent.charAt(currentContent.length);
 
 							updatedMessages[msgIndex] = {
 								...updatedMessages[msgIndex],
-								content: currentContent + nextChunk,
+								content: currentContent + nextChar,
 							};
 							return updatedMessages;
 						} else if (
 							!isLoading &&
 							currentContent.length >= targetContent.length
 						) {
-							// Jika loading fetch selesai DAN semua text sudah tertulis
+							// Reset typo state for next message
+							typoStateRef.current = {
+								shouldTypo: false,
+								typoPosition: -1,
+								typoChar: "",
+								typoInserted: false,
+								pauseCount: 0,
+								backspaceCount: 0,
+								initialized: false,
+							};
 							setIsTyping(false);
 							return prevMessages;
 						}
 					}
 					return prevMessages;
 				});
-			}, 15); // Speed typing (makin kecil makin cepat)
+			}, 40); // Slower typing (40ms per char)
 		}
 
 		return () => clearInterval(intervalId);
@@ -279,7 +370,6 @@ export default function ChatContent() {
 				}
 			}
 		} catch (error) {
-			console.error("Chat Error:", error);
 			// Jika error, langsung tembak ke buffer agar diketik oleh effect
 			streamBufferRef.current =
 				"\n\n> [!ERROR]\n> CONNECTION_LOST: Uplink failed. Unable to reach neural core.";
