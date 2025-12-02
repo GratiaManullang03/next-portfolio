@@ -9,7 +9,7 @@ export default function AsciiArt() {
 		<div className="relative w-full h-[120px] mb-[10px]">
 			<ASCIIText
 				text="GRAXYA"
-				asciiFontSize={6}
+				asciiFontSize={5}
 				textFontSize={400}
 				textColor="#a855f7"
 				planeBaseHeight={10}

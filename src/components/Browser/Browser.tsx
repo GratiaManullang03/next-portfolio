@@ -6,6 +6,7 @@ import ProjectContent from "./contents/ProjectContent";
 import ExperienceContent from "./contents/ExperienceContent";
 import AchievementsContent from "./contents/AchievementsContent";
 import SkillsContent from "./contents/SkillsContent";
+import ChatContent from "./contents/ChatContent";
 
 interface BrowserProps {
 	command: string;
@@ -33,7 +34,6 @@ const BROWSER_CONFIGS: Record<string, BrowserConfig> = {
 		content: "project",
 	},
 	"/experience": {
-		// <--- Config Experience
 		tabName: "Experience Logs",
 		tabIcon: "💼",
 		url: "https://graxya.dev/experience",
@@ -52,7 +52,7 @@ const BROWSER_CONFIGS: Record<string, BrowserConfig> = {
 		content: "skills",
 	},
 	"/chat": {
-		tabName: "Chat with Me",
+		tabName: "Chat Interface",
 		tabIcon: "💬",
 		url: "https://graxya.dev/chat",
 		content: "chat",
@@ -160,6 +160,8 @@ export default function Browser({ command, onClose }: BrowserProps) {
 				return <AchievementsContent />;
 			case "skills":
 				return <SkillsContent />;
+			case "chat":
+				return <ChatContent />;
 			default:
 				return (
 					<div className="flex-grow p-[40px] overflow-y-auto h-full">
