@@ -2,18 +2,12 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
-import {
-	FiSend,
-	FiCpu,
-	FiTerminal,
-	FiMessageSquare,
-	FiUser,
-	FiActivity,
-} from "react-icons/fi";
+import { FiSend, FiCpu, FiTerminal, FiUser, FiActivity } from "react-icons/fi";
 import CyberCard from "@/components/ui/CyberCard";
 import SplitText from "@/components/ui/SplitText";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import TextType from "@/components/ui/TextType";
 
 // --- Types ---
 interface Message {
@@ -21,6 +15,7 @@ interface Message {
 	role: "user" | "assistant";
 	content: string;
 	timestamp: Date;
+	isStreaming?: boolean; // Penanda sedang mengetik/stream
 }
 
 // --- Animation Variants ---
@@ -50,15 +45,21 @@ const SPLIT_TITLES = [
 	"INTERLINK_ACTIVE",
 ];
 
+const LOADING_PHRASES = [
+	"ESTABLISHING_HANDSHAKE...",
+	"DECRYPTING_PACKETS...",
+	"QUERYING_NEURAL_NET...",
+	"SYNCHRONIZING_DATA...",
+	"CALCULATING_RESPONSE...",
+];
+
 // --- Helper: Generate Custom Session ID ---
-// Format: 3 Random Chars + YYYYMMDDHHmmssSSS
 const generateSessionId = () => {
 	const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 	let prefix = "";
 	for (let i = 0; i < 3; i++) {
 		prefix += chars.charAt(Math.floor(Math.random() * chars.length));
 	}
-
 	const now = new Date();
 	const timestamp =
 		now.getFullYear().toString() +
@@ -72,13 +73,42 @@ const generateSessionId = () => {
 	return `${prefix}${timestamp}`;
 };
 
+// --- Helper: Parse Stream Data ---
+const parseStreamLine = (line: string) => {
+	try {
+		return JSON.parse(line);
+	} catch {
+		try {
+			// Fallback parsing for single quotes
+			const converted = line
+				.replace(/'([^']+)':/g, '"$1":')
+				.replace(/:\s*'([^']*)'/g, ': "$1"');
+			return JSON.parse(converted);
+		} catch {
+			return null;
+		}
+	}
+};
+
 export default function ChatContent() {
 	const [input, setInput] = useState("");
 	const [messages, setMessages] = useState<Message[]>([]);
-	const [isLoading, setIsLoading] = useState(false);
+	const [isLoading, setIsLoading] = useState(false); // Loading state (fetching start)
+	const [isTyping, setIsTyping] = useState(false); // Typing state (rendering char by char)
 	const [titleIndex, setTitleIndex] = useState(0);
+
+	// Ref untuk menyimpan content mentah yang diterima dari server
+	const streamBufferRef = useRef<string>("");
+	const activeMessageIdRef = useRef<string | null>(null);
+
 	const [sessionId] = useState(() => {
-		// Generate new session ID on every page load/refresh
+		if (typeof window !== "undefined") {
+			const stored = sessionStorage.getItem("chat_session_id");
+			if (stored) return stored;
+			const newId = generateSessionId();
+			sessionStorage.setItem("chat_session_id", newId);
+			return newId;
+		}
 		return generateSessionId();
 	});
 
@@ -87,12 +117,14 @@ export default function ChatContent() {
 
 	// --- Auto Scroll ---
 	const scrollToBottom = () => {
-		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+		if (messagesEndRef.current) {
+			messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+		}
 	};
 
 	useEffect(() => {
 		scrollToBottom();
-	}, [messages]);
+	}, [messages, isTyping]); // Scroll saat message berubah atau sedang typing
 
 	// --- Title Animation ---
 	useEffect(() => {
@@ -102,69 +134,87 @@ export default function ChatContent() {
 		return () => clearInterval(interval);
 	}, []);
 
-	// --- Helper: Parse Stream Data ---
-	// Menangani format pseudo-JSON (Python dict string) yang menggunakan single quote
-	const parseStreamLine = (line: string) => {
-		try {
-			// Coba parsing JSON standar dulu
-			return JSON.parse(line);
-		} catch {
-			// Fallback: Convert single quotes to double quotes and parse
-			try {
-				// Replace single quotes with double quotes carefully
-				// Only replace quotes around keys and string values
-				const converted = line
-					.replace(/'([^']+)':/g, '"$1":') // Replace 'key': with "key":
-					.replace(/:\s*'([^']*)'/g, ': "$1"'); // Replace : 'value' with : "value"
+	// --- TYPING EFFECT LOOP ---
+	// Ini adalah jantung dari efek typing halus.
+	// Kita cek apakah ada isi di buffer yang belum ditampilkan di pesan terakhir.
+	useEffect(() => {
+		let intervalId: NodeJS.Timeout;
 
-				return JSON.parse(converted);
-			} catch {
-				// Last resort: Manual regex parsing
-				try {
-					const typeMatch = line.match(/'type':\s*'([^']*)'/);
-					const contentMatch = line.match(/'content':\s*'([^']*)'/);
-					const sessionMatch = line.match(/'session_id':\s*'([^']*)'/);
+		if (isTyping && activeMessageIdRef.current) {
+			intervalId = setInterval(() => {
+				setMessages((prevMessages) => {
+					const updatedMessages = [...prevMessages];
+					const msgIndex = updatedMessages.findIndex(
+						(m) => m.id === activeMessageIdRef.current
+					);
 
-					if (typeMatch) {
-						const result: any = { type: typeMatch[1] };
-						if (contentMatch) result.content = contentMatch[1];
-						if (sessionMatch) result.session_id = sessionMatch[1];
-						return result;
+					if (msgIndex !== -1) {
+						const currentContent = updatedMessages[msgIndex].content;
+						const targetContent = streamBufferRef.current;
+
+						// Jika panjang konten yang ditampilkan < buffer, tambah 1-3 karakter
+						if (currentContent.length < targetContent.length) {
+							// Ambil chunk kecil (2 char) agar typing terasa cepat tapi smooth
+							const nextChunk = targetContent.slice(
+								currentContent.length,
+								currentContent.length + 2
+							);
+
+							updatedMessages[msgIndex] = {
+								...updatedMessages[msgIndex],
+								content: currentContent + nextChunk,
+							};
+							return updatedMessages;
+						} else if (
+							!isLoading &&
+							currentContent.length >= targetContent.length
+						) {
+							// Jika loading fetch selesai DAN semua text sudah tertulis
+							setIsTyping(false);
+							return prevMessages;
+						}
 					}
-					return null;
-				} catch {
-					return null;
-				}
-			}
+					return prevMessages;
+				});
+			}, 15); // Speed typing (makin kecil makin cepat)
 		}
-	};
+
+		return () => clearInterval(intervalId);
+	}, [isTyping, isLoading]);
 
 	// --- Handle Submit ---
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		if (!input.trim() || isLoading) return;
+		if (!input.trim() || isLoading || isTyping) return;
 
 		const userInputValue = input.trim();
+
+		// 1. Tambahkan pesan User
 		const userMsg: Message = {
-			id: Date.now().toString(),
+			id: `user-${Date.now()}`,
 			role: "user",
 			content: userInputValue,
 			timestamp: new Date(),
 		};
 
-		// Placeholder message for streaming
-		const botMsgId = (Date.now() + 1).toString();
+		// 2. Siapkan Placeholder pesan Bot
+		const botMsgId = `bot-${Date.now()}`;
 		const botMsg: Message = {
 			id: botMsgId,
 			role: "assistant",
-			content: "",
+			content: "", // Content kosong dulu (nanti diisi TextType loading / typing)
 			timestamp: new Date(),
+			isStreaming: true,
 		};
 
-		// Add both user message and placeholder bot message at once
+		// Reset state
+		streamBufferRef.current = "";
+		activeMessageIdRef.current = botMsgId;
+
 		setMessages((prev) => [...prev, userMsg, botMsg]);
 		setInput("");
-		setIsLoading(true);
+		setIsLoading(true); // Mulai loading (fetch network)
+		setIsTyping(true); // Mulai mode typing (walaupun buffer masih kosong)
 
 		try {
 			const response = await fetch(
@@ -184,63 +234,36 @@ export default function ChatContent() {
 				}
 			);
 
-			if (!response.ok) {
+			if (!response.ok)
 				throw new Error(`HTTP error! status: ${response.status}`);
-			}
-
 			if (!response.body) throw new Error("No response body");
 
 			const reader = response.body.getReader();
 			const decoder = new TextDecoder();
 			let done = false;
-			let accumulatedContent = "";
-			let buffer = ""; // Buffer untuk menyimpan incomplete lines
+			let buffer = "";
 
 			while (!done) {
 				const { value, done: doneReading } = await reader.read();
 				done = doneReading;
 
-				if (!value) continue;
+				if (value) {
+					buffer += decoder.decode(value, { stream: !done });
+					const lines = buffer.split("\n");
+					buffer = lines.pop() || "";
 
-				const chunkValue = decoder.decode(value, { stream: !done });
-				buffer += chunkValue;
-
-				// Split by newlines and process complete lines
-				const lines = buffer.split("\n");
-
-				// Keep the last incomplete line in buffer
-				buffer = lines.pop() || "";
-
-				for (const line of lines) {
-					if (!line.trim()) continue;
-
-					if (line.startsWith("data: ")) {
-						const jsonStr = line.replace("data: ", "").trim();
-
-						if (jsonStr === "{'type': 'done'}" || jsonStr === "[DONE]") {
-							done = true;
-							break;
-						}
-
-						const parsed = parseStreamLine(jsonStr);
-
-						if (parsed) {
-							console.log("Parsed:", parsed); // Debug log
-
-							if (parsed.type === "content" && parsed.content) {
-								accumulatedContent += parsed.content;
-
-								// Update message with accumulated content immediately
-								setMessages((prev) =>
-									prev.map((msg) =>
-										msg.id === botMsgId
-											? { ...msg, content: accumulatedContent }
-											: msg
-									)
-								);
-
-								// Add small delay to make streaming visible
-								await new Promise((resolve) => setTimeout(resolve, 10));
+					for (const line of lines) {
+						if (!line.trim()) continue;
+						if (line.startsWith("data: ")) {
+							const jsonStr = line.replace("data: ", "").trim();
+							if (jsonStr === "{'type': 'done'}" || jsonStr === "[DONE]") {
+								done = true;
+								break;
+							}
+							const parsed = parseStreamLine(jsonStr);
+							if (parsed && parsed.type === "content" && parsed.content) {
+								// MASUKKAN KE BUFFER, JANGAN LANGSUNG KE STATE
+								streamBufferRef.current += parsed.content;
 							}
 						}
 					}
@@ -248,20 +271,11 @@ export default function ChatContent() {
 			}
 		} catch (error) {
 			console.error("Chat Error:", error);
-			// Update the placeholder message with error content
-			setMessages((prev) =>
-				prev.map((msg) =>
-					msg.id === botMsgId
-						? {
-								...msg,
-								content:
-									"CONNECTION_ERR: Uplink failed. Unable to reach neural core. Try again later.",
-						  }
-						: msg
-				)
-			);
+			// Jika error, langsung tembak ke buffer agar diketik oleh effect
+			streamBufferRef.current =
+				"\n\n> [!ERROR]\n> CONNECTION_LOST: Uplink failed. Unable to reach neural core.";
 		} finally {
-			setIsLoading(false);
+			setIsLoading(false); // Fetch selesai, tapi isTyping mungkin masih jalan sampai buffer habis
 			setTimeout(() => inputRef.current?.focus(), 100);
 		}
 	};
@@ -295,17 +309,18 @@ export default function ChatContent() {
 						/>
 					</div>
 
-					<div className="flex items-center gap-4 mt-2">
-						<p className="text-[10px] text-cyan-400/80 font-mono tracking-[0.1em] uppercase flex items-center">
-							SESSION_ID: <span className="text-white ml-1">{sessionId}</span>
+					{/* FIX: Vertical Alignment Center */}
+					<div className="flex items-center gap-4 mt-2 h-5">
+						<p className="text-[10px] text-cyan-400/80 font-mono tracking-[0.1em] uppercase flex items-center h-full">
+							SESSION_ID: <span className="text-white ml-2">{sessionId}</span>
 						</p>
-						<div className="flex items-center gap-1.5">
+						<div className="flex items-center gap-2 h-full">
 							<span
 								className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
 									isLoading ? "bg-yellow-500 animate-ping" : "bg-green-500"
 								}`}
 							/>
-							<span className="text-[9px] text-gray-500 uppercase leading-none">
+							<span className="text-[9px] text-gray-500 uppercase font-bold pt-[1px]">
 								{isLoading ? "TRANSMITTING..." : "ONLINE"}
 							</span>
 						</div>
@@ -329,17 +344,20 @@ export default function ChatContent() {
 						</div>
 					</div>
 				) : (
-					<AnimatePresence mode="popLayout">
-						<motion.div
-							variants={containerVariants}
-							initial="hidden"
-							animate="show"
-							className="space-y-6 pb-4"
-						>
+					<motion.div
+						variants={containerVariants}
+						initial="hidden"
+						animate="show"
+						className="space-y-6 pb-4"
+					>
+						<AnimatePresence initial={false}>
 							{messages.map((msg) => (
 								<motion.div
 									key={msg.id}
 									variants={messageVariants}
+									initial="hidden"
+									animate="show"
+									exit={{ opacity: 0, scale: 0.95 }}
 									layout
 									className={`flex ${
 										msg.role === "user" ? "justify-end" : "justify-start"
@@ -362,20 +380,40 @@ export default function ChatContent() {
 															{msg.timestamp.toLocaleTimeString()}
 														</span>
 													</div>
-													<div className="markdown-content">
-														<ReactMarkdown remarkPlugins={[remarkGfm]}>
-															{msg.content || " "}
-														</ReactMarkdown>
-														{msg.id === messages[messages.length - 1].id &&
-															isLoading && (
-																<span className="inline-block w-1.5 h-3 ml-1 bg-cyan-500 animate-pulse align-middle" />
+
+													<div className="markdown-content min-h-[20px]">
+														{/* KONDISI: Jika konten masih kosong DAN sedang loading/typing, tampilkan Loading Text */}
+														{!msg.content && (isLoading || isTyping) ? (
+															<div className="text-cyan-500/70 text-sm font-mono flex items-center gap-2">
+																<span className="animate-pulse">▶</span>
+																<TextType
+																	text={LOADING_PHRASES}
+																	typingSpeed={50}
+																	deletingSpeed={20}
+																	pauseDuration={1000}
+																	loop={true}
+																	showCursor={true}
+																/>
+															</div>
+														) : (
+															/* Konten Markdown sesungguhnya */
+															<ReactMarkdown remarkPlugins={[remarkGfm]}>
+																{msg.content}
+															</ReactMarkdown>
+														)}
+
+														{/* Cursor tambahan jika sedang mengetik konten bot */}
+														{msg.content &&
+															isTyping &&
+															msg.id === activeMessageIdRef.current && (
+																<span className="inline-block w-2 h-4 ml-1 bg-cyan-500 animate-pulse align-middle" />
 															)}
 													</div>
 												</div>
 											</CyberCard>
 										) : (
 											<div className="bg-white/5 border border-white/10 rounded-2xl rounded-tr-sm px-5 py-3 backdrop-blur-sm">
-												<p className="text-sm text-white font-medium">
+												<p className="text-sm text-white font-medium whitespace-pre-wrap">
 													{msg.content}
 												</p>
 												<div className="text-[9px] text-right text-gray-500 mt-1 flex items-center justify-end gap-1">
@@ -387,55 +425,65 @@ export default function ChatContent() {
 									</div>
 								</motion.div>
 							))}
-						</motion.div>
-					</AnimatePresence>
+						</AnimatePresence>
+					</motion.div>
 				)}
 				<div ref={messagesEndRef} />
 			</div>
 
 			{/* --- INPUT AREA --- */}
-			<div className="shrink-0 p-4 md:p-6 bg-[#030303]/95 border-t border-white/10 z-30">
-				<form onSubmit={handleSubmit} className="relative max-w-4xl mx-auto">
-					<div className="relative group">
-						<div className="absolute -inset-[1px] bg-gradient-to-r from-purple-600 via-cyan-500 to-purple-600 rounded-lg opacity-30 group-hover:opacity-100 transition-opacity duration-500 blur-[2px]" />
-						<div className="relative flex items-center bg-[#0a0a0c] rounded-lg border border-white/10 overflow-hidden">
-							<div className="pl-4 pr-2 text-gray-500">
-								<FiTerminal className="w-4 h-4" />
+			<div className="shrink-0 bg-[#030303]/95 border-t border-white/10 z-30 flex flex-col">
+				{/* Container Input */}
+				<div className="p-4 md:px-6 md:pt-6 md:pb-2">
+					<form onSubmit={handleSubmit} className="relative max-w-4xl mx-auto">
+						<div className="relative group">
+							<div className="absolute -inset-[1px] bg-gradient-to-r from-purple-600 via-cyan-500 to-purple-600 rounded-lg opacity-30 group-hover:opacity-100 transition-opacity duration-500 blur-[2px]" />
+							<div className="relative flex items-center bg-[#0a0a0c] rounded-lg border border-white/10 overflow-hidden">
+								<div className="pl-4 pr-2 text-gray-500">
+									<FiTerminal className="w-4 h-4" />
+								</div>
+								<input
+									ref={inputRef}
+									type="text"
+									value={input}
+									onChange={(e) => setInput(e.target.value)}
+									placeholder={
+										isLoading || isTyping
+											? "Processing data..."
+											: "Enter command or query..."
+									}
+									disabled={isLoading || isTyping}
+									className="flex-1 bg-transparent border-none text-white text-sm px-2 py-4 focus:ring-0 focus:outline-none placeholder-gray-600 font-mono disabled:opacity-50"
+									autoComplete="off"
+								/>
+								<button
+									type="submit"
+									disabled={!input.trim() || isLoading || isTyping}
+									className="px-4 py-2 mr-2 text-xs font-bold bg-white/5 hover:bg-white/10 text-cyan-500 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+								>
+									{isLoading || isTyping ? (
+										<FiActivity className="w-4 h-4 animate-spin" />
+									) : (
+										<>
+											SEND <FiSend className="w-3 h-3" />
+										</>
+									)}
+								</button>
 							</div>
-							<input
-								ref={inputRef}
-								type="text"
-								value={input}
-								onChange={(e) => setInput(e.target.value)}
-								placeholder="Enter command or query..."
-								disabled={isLoading}
-								className="flex-1 bg-transparent border-none text-white text-sm px-2 py-4 focus:ring-0 focus:outline-none placeholder-gray-600 font-mono"
-								autoComplete="off"
-							/>
-							<button
-								type="submit"
-								disabled={!input.trim() || isLoading}
-								className="px-4 py-2 mr-2 text-xs font-bold bg-white/5 hover:bg-white/10 text-cyan-500 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
-							>
-								{isLoading ? (
-									<FiActivity className="w-4 h-4 animate-spin" />
-								) : (
-									<>
-										SEND <FiSend className="w-3 h-3" />
-									</>
-								)}
-							</button>
 						</div>
-					</div>
-					<div className="absolute -bottom-4 left-0 right-0 flex justify-between px-1">
-						<span className="text-[9px] text-gray-600 font-mono">
-							ENCRYPTED_CHANNEL::ACTIVE
-						</span>
-						<span className="text-[9px] text-gray-600 font-mono">
-							v1.0.4-beta
-						</span>
-					</div>
-				</form>
+					</form>
+				</div>
+
+				{/* Footer Info - Centered Vertical */}
+				<div className="h-8 flex items-center justify-between px-6 max-w-4xl mx-auto w-full">
+					<span className="text-[9px] text-gray-600 font-mono flex items-center gap-2">
+						<span className="w-1 h-1 rounded-full bg-green-500/50"></span>
+						ENCRYPTED_CHANNEL::ACTIVE
+					</span>
+					<span className="text-[9px] text-gray-600 font-mono opacity-50">
+						v1.0.4-beta
+					</span>
+				</div>
 			</div>
 		</div>
 	);
