@@ -12,6 +12,8 @@ import {
 } from "react-icons/fi";
 import CyberCard from "@/components/ui/CyberCard";
 import SplitText from "@/components/ui/SplitText";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 // --- Types ---
 interface Message {
@@ -76,14 +78,7 @@ export default function ChatContent() {
 	const [isLoading, setIsLoading] = useState(false);
 	const [titleIndex, setTitleIndex] = useState(0);
 	const [sessionId] = useState(() => {
-		if (typeof window !== "undefined") {
-			// Check local storage or generate new for this session
-			const stored = sessionStorage.getItem("chat_session_id");
-			if (stored) return stored;
-			const newId = generateSessionId();
-			sessionStorage.setItem("chat_session_id", newId);
-			return newId;
-		}
+		// Generate new session ID on every page load/refresh
 		return generateSessionId();
 	});
 
@@ -114,23 +109,32 @@ export default function ChatContent() {
 			// Coba parsing JSON standar dulu
 			return JSON.parse(line);
 		} catch {
-			// Fallback: Manual parsing untuk format {'key': 'value'}
-			// Hati-hati: Regex ini sederhana dan mungkin butuh penyesuaian jika content mengandung quote
+			// Fallback: Convert single quotes to double quotes and parse
 			try {
-				// Ganti single quotes pembungkus key/value menjadi double quotes
-				// Ini agak tricky, jadi kita coba ambil value content-nya saja via Regex
-				const typeMatch = line.match(/'type':\s*'([^']*)'/);
-				const contentMatch = line.match(/'content':\s*'((?:[^'\\]|\\.)*)'/);
+				// Replace single quotes with double quotes carefully
+				// Only replace quotes around keys and string values
+				const converted = line
+					.replace(/'([^']+)':/g, '"$1":') // Replace 'key': with "key":
+					.replace(/:\s*'([^']*)'/g, ': "$1"'); // Replace : 'value' with : "value"
 
-				if (typeMatch) {
-					return {
-						type: typeMatch[1],
-						content: contentMatch ? contentMatch[1] : "",
-					};
-				}
-				return null;
+				return JSON.parse(converted);
 			} catch {
-				return null;
+				// Last resort: Manual regex parsing
+				try {
+					const typeMatch = line.match(/'type':\s*'([^']*)'/);
+					const contentMatch = line.match(/'content':\s*'([^']*)'/);
+					const sessionMatch = line.match(/'session_id':\s*'([^']*)'/);
+
+					if (typeMatch) {
+						const result: any = { type: typeMatch[1] };
+						if (contentMatch) result.content = contentMatch[1];
+						if (sessionMatch) result.session_id = sessionMatch[1];
+						return result;
+					}
+					return null;
+				} catch {
+					return null;
+				}
 			}
 		}
 	};
@@ -140,28 +144,27 @@ export default function ChatContent() {
 		e.preventDefault();
 		if (!input.trim() || isLoading) return;
 
+		const userInputValue = input.trim();
 		const userMsg: Message = {
 			id: Date.now().toString(),
 			role: "user",
-			content: input,
+			content: userInputValue,
 			timestamp: new Date(),
 		};
 
-		setMessages((prev) => [...prev, userMsg]);
-		setInput("");
-		setIsLoading(true);
-
 		// Placeholder message for streaming
 		const botMsgId = (Date.now() + 1).toString();
-		setMessages((prev) => [
-			...prev,
-			{
-				id: botMsgId,
-				role: "assistant",
-				content: "",
-				timestamp: new Date(),
-			},
-		]);
+		const botMsg: Message = {
+			id: botMsgId,
+			role: "assistant",
+			content: "",
+			timestamp: new Date(),
+		};
+
+		// Add both user message and placeholder bot message at once
+		setMessages((prev) => [...prev, userMsg, botMsg]);
+		setInput("");
+		setIsLoading(true);
 
 		try {
 			const response = await fetch(
@@ -191,18 +194,29 @@ export default function ChatContent() {
 			const decoder = new TextDecoder();
 			let done = false;
 			let accumulatedContent = "";
+			let buffer = ""; // Buffer untuk menyimpan incomplete lines
 
 			while (!done) {
 				const { value, done: doneReading } = await reader.read();
 				done = doneReading;
-				const chunkValue = decoder.decode(value, { stream: true });
 
-				// Data stream biasanya dipisahkan oleh 'data: '
-				const lines = chunkValue.split("\n");
+				if (!value) continue;
+
+				const chunkValue = decoder.decode(value, { stream: !done });
+				buffer += chunkValue;
+
+				// Split by newlines and process complete lines
+				const lines = buffer.split("\n");
+
+				// Keep the last incomplete line in buffer
+				buffer = lines.pop() || "";
 
 				for (const line of lines) {
+					if (!line.trim()) continue;
+
 					if (line.startsWith("data: ")) {
 						const jsonStr = line.replace("data: ", "").trim();
+
 						if (jsonStr === "{'type': 'done'}" || jsonStr === "[DONE]") {
 							done = true;
 							break;
@@ -210,31 +224,42 @@ export default function ChatContent() {
 
 						const parsed = parseStreamLine(jsonStr);
 
-						if (parsed && parsed.type === "content") {
-							accumulatedContent += parsed.content;
-							setMessages((prev) =>
-								prev.map((msg) =>
-									msg.id === botMsgId
-										? { ...msg, content: accumulatedContent }
-										: msg
-								)
-							);
+						if (parsed) {
+							console.log("Parsed:", parsed); // Debug log
+
+							if (parsed.type === "content" && parsed.content) {
+								accumulatedContent += parsed.content;
+
+								// Update message with accumulated content immediately
+								setMessages((prev) =>
+									prev.map((msg) =>
+										msg.id === botMsgId
+											? { ...msg, content: accumulatedContent }
+											: msg
+									)
+								);
+
+								// Add small delay to make streaming visible
+								await new Promise((resolve) => setTimeout(resolve, 10));
+							}
 						}
 					}
 				}
 			}
 		} catch (error) {
 			console.error("Chat Error:", error);
-			setMessages((prev) => [
-				...prev,
-				{
-					id: Date.now().toString(),
-					role: "assistant",
-					content:
-						"CONNECTION_ERR: Uplink failed. Unable to reach neural core. Try again later.",
-					timestamp: new Date(),
-				},
-			]);
+			// Update the placeholder message with error content
+			setMessages((prev) =>
+				prev.map((msg) =>
+					msg.id === botMsgId
+						? {
+								...msg,
+								content:
+									"CONNECTION_ERR: Uplink failed. Unable to reach neural core. Try again later.",
+						  }
+						: msg
+				)
+			);
 		} finally {
 			setIsLoading(false);
 			setTimeout(() => inputRef.current?.focus(), 100);
@@ -271,16 +296,16 @@ export default function ChatContent() {
 					</div>
 
 					<div className="flex items-center gap-4 mt-2">
-						<p className="text-[10px] text-cyan-400/80 font-mono tracking-[0.1em] uppercase">
-							SESSION_ID: <span className="text-white">{sessionId}</span>
+						<p className="text-[10px] text-cyan-400/80 font-mono tracking-[0.1em] uppercase flex items-center">
+							SESSION_ID: <span className="text-white ml-1">{sessionId}</span>
 						</p>
 						<div className="flex items-center gap-1.5">
 							<span
-								className={`w-1.5 h-1.5 rounded-full ${
+								className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
 									isLoading ? "bg-yellow-500 animate-ping" : "bg-green-500"
 								}`}
 							/>
-							<span className="text-[9px] text-gray-500">
+							<span className="text-[9px] text-gray-500 uppercase leading-none">
 								{isLoading ? "TRANSMITTING..." : "ONLINE"}
 							</span>
 						</div>
@@ -337,14 +362,14 @@ export default function ChatContent() {
 															{msg.timestamp.toLocaleTimeString()}
 														</span>
 													</div>
-													<div className="prose prose-invert prose-sm max-w-none">
-														<p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap font-light">
-															{msg.content}
-															{msg.id === messages[messages.length - 1].id &&
-																isLoading && (
-																	<span className="inline-block w-1.5 h-3 ml-1 bg-cyan-500 animate-pulse align-middle" />
-																)}
-														</p>
+													<div className="markdown-content">
+														<ReactMarkdown remarkPlugins={[remarkGfm]}>
+															{msg.content || " "}
+														</ReactMarkdown>
+														{msg.id === messages[messages.length - 1].id &&
+															isLoading && (
+																<span className="inline-block w-1.5 h-3 ml-1 bg-cyan-500 animate-pulse align-middle" />
+															)}
 													</div>
 												</div>
 											</CyberCard>
