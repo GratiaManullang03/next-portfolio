@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { FiSend, FiCpu, FiTerminal, FiUser, FiActivity } from "react-icons/fi";
-import CyberCard from "@/components/ui/CyberCard";
+import { useLenis } from "@/hooks/useLenis";
 import SplitText from "@/components/ui/SplitText";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -114,6 +114,15 @@ export default function ChatContent() {
 
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
+	const chatScrollRef = useRef<HTMLDivElement>(null);
+
+	// Initialize Lenis for smooth scrolling
+	useLenis(chatScrollRef, {
+		duration: 1.2,
+		easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+		smoothWheel: true,
+		syncTouch: false,
+	});
 
 	// --- Auto Scroll ---
 	const scrollToBottom = () => {
@@ -329,7 +338,10 @@ export default function ChatContent() {
 			</div>
 
 			{/* --- CHAT AREA --- */}
-			<div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar relative scroll-smooth z-10 flex flex-col gap-6">
+			<div
+				ref={chatScrollRef}
+				className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar relative scroll-smooth z-10 flex flex-col gap-6"
+			>
 				{messages.length === 0 ? (
 					<div className="h-full flex flex-col items-center justify-center text-center opacity-50 space-y-4 min-h-[300px]">
 						<div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
@@ -369,7 +381,7 @@ export default function ChatContent() {
 										}`}
 									>
 										{msg.role === "assistant" ? (
-											<CyberCard className="w-full">
+											<div className="w-full bg-white/5 border border-white/10 rounded-2xl rounded-tl-sm backdrop-blur-sm">
 												<div className="p-4 relative z-10">
 													<div className="flex items-center gap-2 mb-3 border-b border-white/5 pb-2">
 														<FiCpu className="w-3 h-3 text-cyan-500" />
@@ -396,21 +408,29 @@ export default function ChatContent() {
 																/>
 															</div>
 														) : (
-															/* Konten Markdown sesungguhnya */
-															<ReactMarkdown remarkPlugins={[remarkGfm]}>
-																{msg.content}
-															</ReactMarkdown>
+															/* Konten Markdown sesungguhnya dengan cursor inline */
+															<div className="text-sm text-white font-medium markdown-body">
+																<ReactMarkdown
+																	remarkPlugins={[remarkGfm]}
+																	components={{
+																		p: ({ children }) => (
+																			<span className="inline">
+																				{children}
+																				{isTyping &&
+																					msg.id === activeMessageIdRef.current && (
+																						<span className="inline-block w-[2px] h-[1em] ml-[2px] bg-cyan-500 animate-pulse" />
+																					)}
+																			</span>
+																		),
+																	}}
+																>
+																	{msg.content}
+																</ReactMarkdown>
+															</div>
 														)}
-
-														{/* Cursor tambahan jika sedang mengetik konten bot */}
-														{msg.content &&
-															isTyping &&
-															msg.id === activeMessageIdRef.current && (
-																<span className="inline-block w-2 h-4 ml-1 bg-cyan-500 animate-pulse align-middle" />
-															)}
 													</div>
 												</div>
-											</CyberCard>
+											</div>
 										) : (
 											<div className="bg-white/5 border border-white/10 rounded-2xl rounded-tr-sm px-5 py-3 backdrop-blur-sm">
 												<p className="text-sm text-white font-medium whitespace-pre-wrap">
