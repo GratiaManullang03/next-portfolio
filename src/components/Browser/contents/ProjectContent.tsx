@@ -36,12 +36,12 @@ const itemVariants: Variants = {
 };
 
 const detailVariants: Variants = {
-	hidden: { opacity: 0, scale: 0.9, y: 50 },
+	hidden: { opacity: 0, scale: 0.95, y: 20 },
 	visible: {
 		opacity: 1,
 		scale: 1,
 		y: 0,
-		transition: { duration: 0.4, ease: [0.23, 1, 0.32, 1] },
+		transition: { duration: 0.3, ease: "easeOut" },
 	},
 	exit: {
 		opacity: 0,
@@ -75,6 +75,9 @@ export default function ProjectContent() {
 	});
 
 	// Initialize Lenis for modal scroll
+	// Note: Lenis terkadang konflik dengan overflow container biasa jika tidak disetting hati-hati
+	// Untuk modal popup yang h-fit, native scroll browser seringkali lebih mulus & tidak bug
+	// Namun kita biarkan hook ini jika kamu memang ingin smooth scroll di dalam modal
 	useLenis(modalScrollRef, {
 		duration: 1.0,
 		smoothWheel: true,
@@ -99,7 +102,7 @@ export default function ProjectContent() {
 				<div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-900/5 blur-[120px]" />
 			</div>
 
-			{/* --- HEADER SECTION (Sandwich Layout) --- */}
+			{/* --- HEADER SECTION --- */}
 			<div className="shrink-0 px-6 md:px-10 py-5 border-b border-white/5 bg-[#030303]/90 backdrop-blur-md sticky top-0 z-20 shadow-2xl flex flex-col md:flex-row justify-between items-end gap-6 relative">
 				<div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-50" />
 
@@ -111,7 +114,6 @@ export default function ProjectContent() {
 						</span>
 					</div>
 
-					{/* TITLE SECTION WITH CONSISTENT HEIGHT */}
 					<div className="h-10 md:h-12 flex items-center overflow-hidden w-full">
 						<div className="text-2xl md:text-4xl font-black text-white tracking-widest flex items-center">
 							<TextType
@@ -193,7 +195,7 @@ export default function ProjectContent() {
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 1 }}
 						exit={{ opacity: 0 }}
-						className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 md:p-8"
+						className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 md:p-8 overflow-hidden" // Added overflow-hidden to prevent body scroll issues
 						onClick={() => setSelectedProject(null)}
 					>
 						<motion.div
@@ -201,9 +203,11 @@ export default function ProjectContent() {
 							initial="hidden"
 							animate="visible"
 							exit="exit"
-							className="w-full max-w-5xl h-[85vh] bg-[#0a0a0c] border border-purple-500/30 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col relative"
+							// PERBAIKAN 1: Menggunakan max-h-[85vh] dan h-fit agar fleksibel
+							className="w-full max-w-4xl max-h-[85vh] h-fit bg-[#0a0a0c] border border-purple-500/30 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col relative overflow-hidden"
 							onClick={(e) => e.stopPropagation()}
 						>
+							{/* Close Button */}
 							<button
 								onClick={() => setSelectedProject(null)}
 								className="absolute top-4 right-4 z-20 p-2 bg-black/50 text-white rounded-full hover:bg-red-500/20 hover:text-red-500 transition-colors border border-white/10"
@@ -220,7 +224,9 @@ export default function ProjectContent() {
 								</svg>
 							</button>
 
-							<div className="h-[40%] w-full relative shrink-0 overflow-hidden group">
+							{/* Image Header */}
+							{/* PERBAIKAN 2: Menggunakan Fixed Height (h-56 md:h-72) agar h-fit parent bekerja */}
+							<div className="relative w-full h-56 md:h-72 shrink-0 overflow-hidden group">
 								{selectedProject.thumbnail ? (
 									// eslint-disable-next-line @next/next/no-img-element
 									<img
@@ -246,48 +252,52 @@ export default function ProjectContent() {
 											</span>
 										)}
 									</div>
-									<h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-2 drop-shadow-lg">
+									<h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight mb-2 drop-shadow-lg">
 										{selectedProject.title}
 									</h2>
 								</div>
 							</div>
 
+							{/* Content Section */}
+							{/* PERBAIKAN 3: overflow-y-auto aktif jika konten melebihi max-h */}
 							<div
 								ref={modalScrollRef}
-								className="flex-1 overflow-y-auto custom-scrollbar bg-[#0a0a0c]"
+								className="overflow-y-auto custom-scrollbar bg-[#0a0a0c]"
 							>
-								<div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-									<div className="md:col-span-2 space-y-6">
+								<div className="p-6 md:p-8 flex flex-col md:flex-row gap-8">
+									{/* Left Column: Description & Tech */}
+									<div className="flex-1 space-y-8">
 										<div>
 											<h3 className="text-purple-500 text-sm font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
 												<FiCode /> Mission Brief
 											</h3>
-											<p className="text-gray-300 leading-relaxed text-lg font-light">
+											<p className="text-gray-300 leading-relaxed text-base md:text-lg font-light">
 												{selectedProject.description}
 											</p>
 										</div>
 
+										{/* Tech Stack - Jarak diatur oleh space-y parent dan padding bawah container utama */}
 										<div>
 											<h3 className="text-purple-500 text-sm font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
 												<FiLayers /> Tech Arsenal
 											</h3>
-											<div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+											<div className="flex flex-wrap gap-2 md:gap-3">
 												{selectedProject.technologies.map((tech, i) => {
 													const iconPath = getTechIcon(tech);
 													return (
 														<div
 															key={i}
-															className="flex items-center gap-3 p-3 bg-[#161618] rounded border border-white/5 hover:border-purple-500/30 transition-colors group/tech"
+															className="flex items-center gap-2 p-2 md:p-3 bg-[#161618] rounded border border-white/5 hover:border-purple-500/30 transition-colors group/tech"
 														>
 															{iconPath ? (
 																// eslint-disable-next-line @next/next/no-img-element
 																<img
 																	src={iconPath}
 																	alt={tech}
-																	className="w-6 h-6 object-contain opacity-70 group-hover/tech:opacity-100 transition-opacity"
+																	className="w-4 h-4 md:w-5 md:h-5 object-contain opacity-70 group-hover/tech:opacity-100 transition-opacity"
 																/>
 															) : (
-																<FiCpu className="w-6 h-6 text-gray-600" />
+																<FiCpu className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
 															)}
 															<span className="text-xs font-medium text-gray-400 group-hover/tech:text-white transition-colors">
 																{tech}
@@ -299,8 +309,9 @@ export default function ProjectContent() {
 										</div>
 									</div>
 
-									<div className="space-y-6">
-										<div className="p-5 bg-[#111] rounded-xl border border-white/10 space-y-4">
+									{/* Right Column: Actions (Sticky on Desktop) */}
+									<div className="w-full md:w-64 shrink-0 space-y-6">
+										<div className="p-5 bg-[#111] rounded-xl border border-white/10 space-y-4 md:sticky md:top-0">
 											<h4 className="text-white font-bold text-sm">
 												Project Access
 											</h4>
@@ -344,12 +355,17 @@ export default function ProjectContent() {
 													Source Encrypted
 												</button>
 											)}
-										</div>
 
-										<div className="text-[10px] text-gray-600 font-mono text-center">
-											ID: {selectedProject.id.toUpperCase()} <br />
-											SECURE_HASH:{" "}
-											{Math.random().toString(36).substring(7).toUpperCase()}
+											<div className="pt-4 border-t border-white/5">
+												<div className="text-[10px] text-gray-600 font-mono text-center">
+													ID: {selectedProject.id.toUpperCase()} <br />
+													SECURE_HASH:{" "}
+													{Math.random()
+														.toString(36)
+														.substring(7)
+														.toUpperCase()}
+												</div>
+											</div>
 										</div>
 									</div>
 								</div>
