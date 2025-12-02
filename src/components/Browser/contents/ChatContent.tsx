@@ -3,11 +3,11 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { FiSend, FiCpu, FiTerminal, FiUser, FiActivity } from "react-icons/fi";
-import { useLenis } from "@/hooks/useLenis";
-import SplitText from "@/components/ui/SplitText";
+import CyberCard from "@/components/ui/CyberCard";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import TextType from "@/components/ui/TextType";
+import HackerScramble from "@/components/ui/HackerScramble"; // <--- Import Component Baru
 
 // --- Types ---
 interface Message {
@@ -15,7 +15,7 @@ interface Message {
 	role: "user" | "assistant";
 	content: string;
 	timestamp: Date;
-	isStreaming?: boolean; // Penanda sedang mengetik/stream
+	isStreaming?: boolean;
 }
 
 // --- Animation Variants ---
@@ -79,7 +79,6 @@ const parseStreamLine = (line: string) => {
 		return JSON.parse(line);
 	} catch {
 		try {
-			// Fallback parsing for single quotes
 			const converted = line
 				.replace(/'([^']+)':/g, '"$1":')
 				.replace(/:\s*'([^']*)'/g, ': "$1"');
@@ -93,30 +92,27 @@ const parseStreamLine = (line: string) => {
 export default function ChatContent() {
 	const [input, setInput] = useState("");
 	const [messages, setMessages] = useState<Message[]>([]);
-	const [isLoading, setIsLoading] = useState(false); // Loading state (fetching start)
-	const [isTyping, setIsTyping] = useState(false); // Typing state (rendering char by char)
+	const [isLoading, setIsLoading] = useState(false);
+	const [isTyping, setIsTyping] = useState(false);
 	const [titleIndex, setTitleIndex] = useState(0);
 
-	// Ref untuk menyimpan content mentah yang diterima dari server
 	const streamBufferRef = useRef<string>("");
 	const activeMessageIdRef = useRef<string | null>(null);
 
-	// Generate new session ID on every refresh (tidak pakai sessionStorage)
-	const [sessionId] = useState(() => generateSessionId());
+	const [sessionId] = useState(() => {
+		if (typeof window !== "undefined") {
+			const stored = sessionStorage.getItem("chat_session_id");
+			if (stored) return stored;
+			const newId = generateSessionId();
+			sessionStorage.setItem("chat_session_id", newId);
+			return newId;
+		}
+		return generateSessionId();
+	});
 
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
-	const chatScrollRef = useRef<HTMLDivElement>(null);
 
-	// Initialize Lenis for smooth scrolling
-	useLenis(chatScrollRef, {
-		duration: 1.2,
-		easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-		smoothWheel: true,
-		syncTouch: false,
-	});
-
-	// --- Auto Scroll ---
 	const scrollToBottom = () => {
 		if (messagesEndRef.current) {
 			messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -125,36 +121,17 @@ export default function ChatContent() {
 
 	useEffect(() => {
 		scrollToBottom();
-	}, [messages, isTyping]); // Scroll saat message berubah atau sedang typing
+	}, [messages, isTyping]);
 
-	// --- Title Animation ---
+	// --- Title Animation Interval ---
 	useEffect(() => {
 		const interval = setInterval(() => {
 			setTitleIndex((prev) => (prev + 1) % SPLIT_TITLES.length);
-		}, 4000);
+		}, 4000); // Ganti judul setiap 4 detik
 		return () => clearInterval(interval);
 	}, []);
 
-	// Ref untuk typo simulation
-	const typoStateRef = useRef<{
-		shouldTypo: boolean;
-		typoPosition: number;
-		typoChar: string;
-		typoInserted: boolean;
-		pauseCount: number;
-		backspaceCount: number;
-		initialized: boolean;
-	}>({
-		shouldTypo: false,
-		typoPosition: -1,
-		typoChar: "",
-		typoInserted: false,
-		pauseCount: 0,
-		backspaceCount: 0,
-		initialized: false,
-	});
-
-	// --- TYPING EFFECT LOOP dengan Human-like typo ---
+	// --- TYPING EFFECT LOOP ---
 	useEffect(() => {
 		let intervalId: NodeJS.Timeout;
 
@@ -170,113 +147,28 @@ export default function ChatContent() {
 						const currentContent = updatedMessages[msgIndex].content;
 						const targetContent = streamBufferRef.current;
 
-						// Initialize typo once when we have enough content
-						if (
-							!typoStateRef.current.initialized &&
-							targetContent.length > 30 &&
-							currentContent.length < 10
-						) {
-							// 80% chance ada typo (increase from 50%)
-							const shouldHaveTypo = Math.random() > 0.2;
-							if (shouldHaveTypo) {
-								// Typo position: antara 30% - 50% dari total panjang
-								const typoPos = Math.floor(
-									targetContent.length * (0.3 + Math.random() * 0.2)
-								);
-								// Random typo character
-								const typoChars = "qwertyuiopasdfghjklzxcvbnm";
-								const typoChar =
-									typoChars[Math.floor(Math.random() * typoChars.length)];
-
-								typoStateRef.current = {
-									shouldTypo: true,
-									typoPosition: typoPos,
-									typoChar,
-									typoInserted: false,
-									pauseCount: 0,
-									backspaceCount: 0,
-									initialized: true,
-								};
-							} else {
-								typoStateRef.current.initialized = true;
-							}
-						}
-
-						const typoState = typoStateRef.current;
-
-						// State 1: Normal typing sampai typo position
-						if (
-							typoState.shouldTypo &&
-							!typoState.typoInserted &&
-							currentContent.length === typoState.typoPosition
-						) {
-							// Insert typo character
-							updatedMessages[msgIndex] = {
-								...updatedMessages[msgIndex],
-								content: currentContent + typoState.typoChar,
-							};
-							typoState.typoInserted = true;
-							return updatedMessages;
-						}
-
-						// State 2: Pause after typo (cursor stays visible - biar keliatan typo-nya)
-						if (
-							typoState.shouldTypo &&
-							typoState.typoInserted &&
-							typoState.pauseCount < 3 &&
-							typoState.backspaceCount === 0
-						) {
-							typoState.pauseCount++;
-							return prevMessages; // Don't change content, just pause
-						}
-
-						// State 3: Backspace the typo (visible with cursor)
-						if (
-							typoState.shouldTypo &&
-							typoState.typoInserted &&
-							typoState.pauseCount >= 3 &&
-							typoState.backspaceCount === 0
-						) {
-							updatedMessages[msgIndex] = {
-								...updatedMessages[msgIndex],
-								content: currentContent.slice(0, -1),
-							};
-							typoState.backspaceCount = 1;
-							typoState.shouldTypo = false; // Done with typo
-							return updatedMessages;
-						}
-
-						// State 4: Normal typing
 						if (currentContent.length < targetContent.length) {
-							// Human-like: 1 char at a time (slower)
-							const nextChar = targetContent.charAt(currentContent.length);
+							const nextChunk = targetContent.slice(
+								currentContent.length,
+								currentContent.length + 2
+							);
 
 							updatedMessages[msgIndex] = {
 								...updatedMessages[msgIndex],
-								content: currentContent + nextChar,
+								content: currentContent + nextChunk,
 							};
 							return updatedMessages;
 						} else if (
 							!isLoading &&
 							currentContent.length >= targetContent.length
 						) {
-							// Reset typo state for next message
-							typoStateRef.current = {
-								shouldTypo: false,
-								typoPosition: -1,
-								typoChar: "",
-								typoInserted: false,
-								pauseCount: 0,
-								backspaceCount: 0,
-								initialized: false,
-							};
 							setIsTyping(false);
 							return prevMessages;
 						}
 					}
 					return prevMessages;
 				});
-			}, 40); // Slower typing (40ms per char)
+			}, 15);
 		}
 
 		return () => clearInterval(intervalId);
@@ -289,7 +181,6 @@ export default function ChatContent() {
 
 		const userInputValue = input.trim();
 
-		// 1. Tambahkan pesan User
 		const userMsg: Message = {
 			id: `user-${Date.now()}`,
 			role: "user",
@@ -297,24 +188,22 @@ export default function ChatContent() {
 			timestamp: new Date(),
 		};
 
-		// 2. Siapkan Placeholder pesan Bot
 		const botMsgId = `bot-${Date.now()}`;
 		const botMsg: Message = {
 			id: botMsgId,
 			role: "assistant",
-			content: "", // Content kosong dulu (nanti diisi TextType loading / typing)
+			content: "",
 			timestamp: new Date(),
 			isStreaming: true,
 		};
 
-		// Reset state
 		streamBufferRef.current = "";
 		activeMessageIdRef.current = botMsgId;
 
 		setMessages((prev) => [...prev, userMsg, botMsg]);
 		setInput("");
-		setIsLoading(true); // Mulai loading (fetch network)
-		setIsTyping(true); // Mulai mode typing (walaupun buffer masih kosong)
+		setIsLoading(true);
+		setIsTyping(true);
 
 		try {
 			const response = await fetch(
@@ -362,7 +251,6 @@ export default function ChatContent() {
 							}
 							const parsed = parseStreamLine(jsonStr);
 							if (parsed && parsed.type === "content" && parsed.content) {
-								// MASUKKAN KE BUFFER, JANGAN LANGSUNG KE STATE
 								streamBufferRef.current += parsed.content;
 							}
 						}
@@ -370,11 +258,11 @@ export default function ChatContent() {
 				}
 			}
 		} catch (error) {
-			// Jika error, langsung tembak ke buffer agar diketik oleh effect
+			console.error("Chat Error:", error);
 			streamBufferRef.current =
 				"\n\n> [!ERROR]\n> CONNECTION_LOST: Uplink failed. Unable to reach neural core.";
 		} finally {
-			setIsLoading(false); // Fetch selesai, tapi isTyping mungkin masih jalan sampai buffer habis
+			setIsLoading(false);
 			setTimeout(() => inputRef.current?.focus(), 100);
 		}
 	};
@@ -400,15 +288,16 @@ export default function ChatContent() {
 						</span>
 					</div>
 
+					{/* TITLE BAR - NEW ANIMATION */}
 					<div className="h-10 md:h-12 flex items-center overflow-hidden w-full">
-						<SplitText
+						<HackerScramble
 							text={SPLIT_TITLES[titleIndex]}
 							className="text-2xl md:text-3xl font-black text-white tracking-widest"
-							targetClassName="text-white"
+							speed={50} // Atur kecepatan resolve
+							scrambleSpeed={35} // Atur kecepatan acak
 						/>
 					</div>
 
-					{/* FIX: Vertical Alignment Center */}
 					<div className="flex items-center gap-4 mt-2 h-5">
 						<p className="text-[10px] text-cyan-400/80 font-mono tracking-[0.1em] uppercase flex items-center h-full">
 							SESSION_ID: <span className="text-white ml-2">{sessionId}</span>
@@ -428,10 +317,7 @@ export default function ChatContent() {
 			</div>
 
 			{/* --- CHAT AREA --- */}
-			<div
-				ref={chatScrollRef}
-				className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar relative scroll-smooth z-10 flex flex-col gap-6"
-			>
+			<div className="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar relative scroll-smooth z-10 flex flex-col gap-6">
 				{messages.length === 0 ? (
 					<div className="h-full flex flex-col items-center justify-center text-center opacity-50 space-y-4 min-h-[300px]">
 						<div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
@@ -446,20 +332,17 @@ export default function ChatContent() {
 						</div>
 					</div>
 				) : (
-					<motion.div
-						variants={containerVariants}
-						initial="hidden"
-						animate="show"
-						className="space-y-6 pb-4"
-					>
-						<AnimatePresence initial={false}>
+					<AnimatePresence mode="popLayout">
+						<motion.div
+							variants={containerVariants}
+							initial="hidden"
+							animate="show"
+							className="space-y-6 pb-4"
+						>
 							{messages.map((msg) => (
 								<motion.div
 									key={msg.id}
 									variants={messageVariants}
-									initial="hidden"
-									animate="show"
-									exit={{ opacity: 0, scale: 0.95 }}
 									layout
 									className={`flex ${
 										msg.role === "user" ? "justify-end" : "justify-start"
@@ -471,7 +354,7 @@ export default function ChatContent() {
 										}`}
 									>
 										{msg.role === "assistant" ? (
-											<div className="w-full bg-white/5 border border-white/10 rounded-2xl rounded-tl-sm backdrop-blur-sm">
+											<CyberCard className="w-full">
 												<div className="p-4 relative z-10">
 													<div className="flex items-center gap-2 mb-3 border-b border-white/5 pb-2">
 														<FiCpu className="w-3 h-3 text-cyan-500" />
@@ -484,7 +367,6 @@ export default function ChatContent() {
 													</div>
 
 													<div className="markdown-content min-h-[20px]">
-														{/* KONDISI: Jika konten masih kosong DAN sedang loading/typing, tampilkan Loading Text */}
 														{!msg.content && (isLoading || isTyping) ? (
 															<div className="text-cyan-500/70 text-sm font-mono flex items-center gap-2">
 																<span className="animate-pulse">▶</span>
@@ -498,29 +380,19 @@ export default function ChatContent() {
 																/>
 															</div>
 														) : (
-															/* Konten Markdown sesungguhnya dengan cursor inline */
-															<div className="text-sm text-white font-medium markdown-body">
-																<ReactMarkdown
-																	remarkPlugins={[remarkGfm]}
-																	components={{
-																		p: ({ children }) => (
-																			<span className="inline">
-																				{children}
-																				{isTyping &&
-																					msg.id === activeMessageIdRef.current && (
-																						<span className="inline-block w-[2px] h-[1em] ml-[2px] bg-cyan-500 animate-pulse" />
-																					)}
-																			</span>
-																		),
-																	}}
-																>
-																	{msg.content}
-																</ReactMarkdown>
-															</div>
+															<ReactMarkdown remarkPlugins={[remarkGfm]}>
+																{msg.content}
+															</ReactMarkdown>
 														)}
+
+														{msg.content &&
+															isTyping &&
+															msg.id === activeMessageIdRef.current && (
+																<span className="inline-block w-2 h-4 ml-1 bg-cyan-500 animate-pulse align-middle" />
+															)}
 													</div>
 												</div>
-											</div>
+											</CyberCard>
 										) : (
 											<div className="bg-white/5 border border-white/10 rounded-2xl rounded-tr-sm px-5 py-3 backdrop-blur-sm">
 												<p className="text-sm text-white font-medium whitespace-pre-wrap">
@@ -535,15 +407,14 @@ export default function ChatContent() {
 									</div>
 								</motion.div>
 							))}
-						</AnimatePresence>
-					</motion.div>
+						</motion.div>
+					</AnimatePresence>
 				)}
 				<div ref={messagesEndRef} />
 			</div>
 
 			{/* --- INPUT AREA --- */}
 			<div className="shrink-0 bg-[#030303]/95 border-t border-white/10 z-30 flex flex-col">
-				{/* Container Input */}
 				<div className="p-4 md:px-6 md:pt-6 md:pb-2">
 					<form onSubmit={handleSubmit} className="relative max-w-4xl mx-auto">
 						<div className="relative group">
@@ -584,7 +455,6 @@ export default function ChatContent() {
 					</form>
 				</div>
 
-				{/* Footer Info - Centered Vertical */}
 				<div className="h-8 flex items-center justify-between px-6 max-w-4xl mx-auto w-full">
 					<span className="text-[9px] text-gray-600 font-mono flex items-center gap-2">
 						<span className="w-1 h-1 rounded-full bg-green-500/50"></span>
