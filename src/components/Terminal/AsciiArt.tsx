@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 
-const ASCIIText = dynamic(() => import("../ASCIIText"), { ssr: false });
+const ASCIIText = dynamic(() => import("../ui/ASCIIText"), { ssr: false });
 
 export default function AsciiArt() {
 	return (

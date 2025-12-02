@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import DecryptedText from "./DecryptedText";
+import DecryptedText from "./ui/DecryptedText";
+import ScrambleText from "./ui/ScrambleText";
 
 export default function Preloader() {
 	const [isLoading, setIsLoading] = useState(true);
@@ -52,17 +53,14 @@ export default function Preloader() {
 					<div className="relative z-10 text-center">
 						{showText && (
 							<>
-								{/* GRAXYA title with decrypt effect */}
+								{/* GRAXYA title with scramble effect */}
 								<div className="mb-8">
-									<DecryptedText
+									<ScrambleText
 										text="GRAXYA"
-										speed={80}
-										maxIterations={15}
-										characters="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%"
-										animateOn="view"
-										className="text-[#a855f7]"
-										encryptedClassName="text-[#06b6d4]"
-										parentClassName="text-5xl md:text-7xl font-bold tracking-wider"
+										radius={120}
+										duration={1.2}
+										scrambleChars=".:"
+										className="text-5xl md:text-7xl font-bold tracking-wider text-[#a855f7] font-mono"
 									/>
 								</div>
 

@@ -13,7 +13,7 @@ import {
 } from "react-icons/fi";
 import { projectsData, Project } from "@/data/projects";
 import SpotlightCard from "@/components/ui/SpotlightCard";
-import DecryptedText from "@/components/DecryptedText";
+import DecryptedText from "@/components/ui/DecryptedText";
 import { getTechIcon } from "@/utils/techIcons";
 import TextType from "@/components/ui/TextType";
 
