@@ -7,12 +7,12 @@ import Link from "next/link";
 
 export default function CurriculumVitae() {
 	const [isLoading, setIsLoading] = useState(true);
-	const pdfUrl = "/files/CV-Felix-Gratia-Mangatur-Manullang.pdf";
+	const pdfUrl = "/files/CV-FelixGratiaMangaturManullang.pdf";
 
 	const handleDownload = () => {
 		const link = document.createElement("a");
 		link.href = pdfUrl;
-		link.download = "CV-Felix-Gratia-Mangatur-Manullang.pdf";
+		link.download = "CV-FelixGratiaMangaturManullang.pdf";
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);

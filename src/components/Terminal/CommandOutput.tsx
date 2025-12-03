@@ -1,5 +1,6 @@
 "use client";
 
+import AboutOutput from './AboutOutput';
 import { COMMANDS, isValidCommand } from "@/constants/commands";
 
 interface CommandOutputProps {
@@ -203,61 +204,7 @@ export default function CommandOutput({
 
 	// Handle /about command
 	if (lowerCommand === "/about") {
-		return (
-			<div className="mb-4 font-mono text-[13px]">
-				<div className="text-[#6b7280] mb-3">$ cat about.txt</div>
-
-				<div className="text-[#e5e7eb] mb-4">
-					<div className="mb-3">
-						<span className="text-[#a855f7]">Name:</span> Felix Gratia Mangatur
-						Manullang
-					</div>
-					<div className="mb-3">
-						<span className="text-[#a855f7]">Alias:</span> Graxya
-					</div>
-					<div className="mb-3">
-						<span className="text-[#a855f7]">Role:</span> Backend Developer
-					</div>
-					<div className="mb-3">
-						<span className="text-[#a855f7]">Focus:</span> IT | Logistics |
-						Business
-					</div>
-					<div className="mb-3">
-						<span className="text-[#a855f7]">Location:</span> Tangerang,
-						Indonesia
-					</div>
-				</div>
-
-				<div className="text-[#6b7280] mb-2">---</div>
-
-				<div className="text-[#e5e7eb] mb-4 leading-relaxed">
-					<p className="mb-2">
-						Ambitious student at Polytechnic Multimedia Nusantara with a{" "}
-						<span className="text-[#22c55e]">3.93 GPA</span>, passionate about
-						building scalable backend systems and exploring the intersection of
-						technology with logistics and business.
-					</p>
-					<p className="mb-2">
-						Experienced in <span className="text-[#06b6d4]">FastAPI</span>,{" "}
-						<span className="text-[#06b6d4]">Laravel</span>,
-						<span className="text-[#06b6d4]"> React</span>, and{" "}
-						<span className="text-[#06b6d4]">Flutter</span>. Currently interning
-						at <span className="text-[#f472b6]">Alfagift</span>, developing
-						internal web applications with clean architecture principles.
-					</p>
-					<p>
-						Former President of E-Commerce Logistics Student Association, event
-						organizer, and national competition participant. Always learning,
-						always building.
-					</p>
-				</div>
-
-				<div className="text-[#6b7280] text-[11px]">
-					Type <span className="text-[#06b6d4]">/social</span> to see my contact
-					info.
-				</div>
-			</div>
-		);
+		return <AboutOutput />;
 	}
 
 	// Check if valid command (non-browser)

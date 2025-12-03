@@ -71,7 +71,7 @@ export default function CVContent() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [subtitleIndex, setSubtitleIndex] = useState(0);
 	const [titleIndex, setTitleIndex] = useState(0);
-	const pdfUrl = "/files/CV-Felix-Gratia-Mangatur-Manullang.pdf";
+	const pdfUrl = "/files/CV-FelixGratiaMangaturManullang.pdf";
 
 	useEffect(() => {
 		const subInterval = setInterval(() => {
@@ -91,7 +91,7 @@ export default function CVContent() {
 	const handleDownload = () => {
 		const link = document.createElement("a");
 		link.href = pdfUrl;
-		link.download = "CV-Felix-Gratia-Mangatur-Manullang.pdf";
+		link.download = "CV-FelixGratiaMangaturManullang.pdf";
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);
