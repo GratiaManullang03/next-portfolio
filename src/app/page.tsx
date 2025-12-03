@@ -29,7 +29,7 @@ export default function Home() {
 	const commandIdRef = useRef(0);
 
 	// Initialize Lenis for smooth scrolling on terminal
-	useLenis(scrollRef, {
+	const lenisRef = useLenis(scrollRef, {
 		duration: 1.2,
 		smoothWheel: true,
 	});
@@ -61,11 +61,16 @@ export default function Home() {
 		return () => window.removeEventListener("keydown", handleKeyDown);
 	}, [browserCommand]);
 
+	// Smooth scroll to bottom using Lenis
 	useEffect(() => {
-		if (scrollRef.current) {
-			scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+		if (scrollRef.current && lenisRef.current) {
+			// Use Lenis scrollTo instead of native scrollTop
+			lenisRef.current.scrollTo(scrollRef.current.scrollHeight, {
+				immediate: false,
+				duration: 0.5,
+			});
 		}
-	}, [commands]);
+	}, [commands, lenisRef]);
 
 	return (
 		<LoadingProvider>

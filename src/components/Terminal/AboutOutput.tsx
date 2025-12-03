@@ -28,6 +28,7 @@ const AboutOutput = () => {
 									src="/assets/images/profile.webp"
 									alt="Profile"
 									fill
+								sizes="(max-width: 768px) 128px, 256px"
 									className={`object-cover rounded grayscale group-hover/avatar:grayscale-0 transition-all duration-500 ${
 										imageLoaded ? "opacity-100" : "opacity-0"
 									}`}

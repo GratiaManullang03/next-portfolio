@@ -16,8 +16,6 @@ export default function Prompt({ onCommand }: PromptProps) {
 
 	useEffect(() => {
 		setMounted(true);
-		// Focus input on mount
-		inputRef.current?.focus();
 
 		const updateTime = () => {
 			const now = new Date();
@@ -32,13 +30,25 @@ export default function Prompt({ onCommand }: PromptProps) {
 
 		updateTime();
 		const interval = setInterval(updateTime, 1000);
-		return () => clearInterval(interval);
+
+		// Focus input on mount after a small delay to avoid autofocus warning
+		const focusTimeout = setTimeout(() => {
+			inputRef.current?.focus();
+		}, 100);
+
+		return () => {
+			clearInterval(interval);
+			clearTimeout(focusTimeout);
+		};
 	}, []);
 
 	// Re-focus when clicking anywhere on the page
 	useEffect(() => {
 		const handleGlobalClick = () => {
-			inputRef.current?.focus();
+			// Only focus if not already focused to avoid conflicts
+			if (document.activeElement !== inputRef.current) {
+				inputRef.current?.focus();
+			}
 		};
 
 		window.addEventListener("click", handleGlobalClick);
@@ -158,7 +168,6 @@ export default function Prompt({ onCommand }: PromptProps) {
 							onChange={(e) => setInput(e.target.value)}
 							onKeyDown={handleKeyDown}
 							className="bg-transparent border-none outline-none text-[#e5e7eb] text-[13px] font-mono w-full caret-transparent absolute left-0 h-full leading-none"
-							autoFocus
 							spellCheck={false}
 							autoComplete="off"
 						/>
