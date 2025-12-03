@@ -8,10 +8,12 @@ const AboutOutput = () => {
 
 	return (
 		<div className="my-6 font-mono text-sm block relative clearfix">
-			{/* --- IMAGE SECTION (FLOATED) --- 
-                md:float-left: Agar teks bisa mengalir di sampingnya.
+			{/* --- IMAGE SECTION ---
+                RESPONSIVITAS:
+                - Mobile & Tablet: Gambar di atas (stacked), teks di bawah
+                - Desktop (lg+): Side-by-side dengan float-left
             */}
-			<div className="flex-shrink-0 group/section md:float-left md:mr-8 md:mb-2 mx-auto md:mx-0 w-fit mb-6 block relative z-10">
+			<div className="flex-shrink-0 group/section lg:float-left lg:mr-8 lg:mb-2 mx-auto lg:mx-0 w-fit mb-6 lg:block relative z-10">
 				<div className="relative">
 					{/* Corner accents */}
 					<div className="absolute -top-1 -left-1 w-3 h-3 border-l border-t border-zinc-700 opacity-0 group-hover/section:opacity-100 transition-opacity duration-300"></div>
@@ -43,8 +45,8 @@ const AboutOutput = () => {
 					</div>
 				</div>
 
-				{/* Status Text */}
-				<div className="mt-2 text-xs flex items-center justify-center md:justify-start gap-2 text-zinc-500">
+				{/* Status Text - Centered on Mobile/Tablet, Left on Desktop */}
+				<div className="mt-2 text-xs flex items-center justify-center lg:justify-start gap-2 text-zinc-500">
 					<div className="relative flex items-center">
 						<span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
 						<span className="absolute w-1.5 h-1.5 bg-green-500 rounded-full animate-ping"></span>
@@ -55,11 +57,13 @@ const AboutOutput = () => {
 
 			{/* --- CONTENT SECTION --- */}
 
-			{/* 1. Header Name 
-                overflow-hidden: KUNCI AGAR GARIS MEMANJANG TAPI TIDAK MENABRAK FOTO.
-                Ini membuat elemen ini mengisi sisa ruang di kanan foto saja.
+			{/* Clear float untuk mobile & tablet - paksa konten turun ke bawah gambar */}
+			<div className="lg:hidden clear-both"></div>
+
+			{/* 1. Header Name
+                overflow-hidden: Tetap dipakai agar border tidak menabrak gambar di mode Desktop.
             */}
-			<div className="overflow-hidden relative pb-3 mb-4 border-b border-zinc-800 group/header">
+			<div className="lg:overflow-hidden relative pb-3 mb-4 border-b border-zinc-800 group/header">
 				<div className="absolute bottom-0 left-0 h-[1px] w-0 bg-gradient-to-r from-zinc-500 to-transparent group-hover/header:w-full transition-all duration-500"></div>
 				<h2 className="text-lg font-bold text-zinc-200 mb-1 tracking-tight">
 					Felix Gratia Mangatur Manullang
@@ -72,20 +76,29 @@ const AboutOutput = () => {
 			</div>
 
 			{/* 2. Info Grid 
-                overflow-hidden juga di sini agar rapi sejajar dengan header di kolom kanan
+                PERBAIKAN: Menghapus 'overflow-hidden' agar text bisa wrapping (mengalir) 
+                ke bawah gambar jika list-nya panjang di layar desktop.
             */}
-			<div className="overflow-hidden mb-5 text-sm">
+			<div className="mb-5 text-sm">
 				<InfoRow label="Location" value="Tangerang, Banten" icon="📍" />
 				<InfoRow
 					label="Education"
 					value="Polytechnic Multimedia Nusantara (2022 - Present)"
 					icon="🎓"
 				/>
+
+				{/* Break untuk 950-858px: Previous pindah ke baris baru */}
+				<div className="hidden min-[768px]:max-[858px]:block clear-both"></div>
+
 				<InfoRow
 					label="Current"
 					value="Intern at PT Samanasoft Inovasi Persada"
 					icon="💼"
 				/>
+
+				{/* Break untuk 857-768px: Current juga ikut pindah */}
+				<div className="hidden min-[768px]:max-[857px]:block clear-both"></div>
+
 				<InfoRow
 					label="Previous"
 					value="Intern at Alfagift (PT Global Loyalty Indonesia)"
@@ -93,16 +106,10 @@ const AboutOutput = () => {
 				/>
 			</div>
 
-			{/* 3. Separator Line (Garis sehabis Previous)
-                Menggunakan overflow-hidden agar garisnya mulai dari sebelah foto,
-                bukan memotong dari kiri layar.
-            */}
+			{/* 3. Separator Line */}
 			<div className="overflow-hidden pt-4 mb-4 border-t border-zinc-800"></div>
 
-			{/* 4. Bio 
-                TIDAK pakai overflow-hidden, agar teksnya bisa 'wrapping' (mengalir)
-                ke bawah foto saat ruang di samping foto habis.
-            */}
+			{/* 4. Bio */}
 			<div className="mb-6 group/bio block">
 				<p className="text-zinc-400 leading-relaxed text-xs text-justify group-hover/bio:text-zinc-300 transition-colors duration-300">
 					High-performing Backend Developer with expertise in architecting
