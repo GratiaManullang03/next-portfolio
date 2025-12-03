@@ -7,150 +7,148 @@ const AboutOutput = () => {
 	const [imageLoaded, setImageLoaded] = useState(false);
 
 	return (
-		<div className="my-6 font-mono text-sm">
-			<div className="flex gap-8 items-start">
-				{/* Left Column: Profile Photo */}
-				<div className="flex-shrink-0 group/section">
-					<div className="relative">
-						{/* Subtle corner accents */}
-						<div className="absolute -top-1 -left-1 w-3 h-3 border-l border-t border-zinc-700 opacity-0 group-hover/section:opacity-100 transition-opacity duration-300"></div>
-						<div className="absolute -top-1 -right-1 w-3 h-3 border-r border-t border-zinc-700 opacity-0 group-hover/section:opacity-100 transition-opacity duration-300"></div>
-						<div className="absolute -bottom-1 -left-1 w-3 h-3 border-l border-b border-zinc-700 opacity-0 group-hover/section:opacity-100 transition-opacity duration-300"></div>
-						<div className="absolute -bottom-1 -right-1 w-3 h-3 border-r border-b border-zinc-700 opacity-0 group-hover/section:opacity-100 transition-opacity duration-300"></div>
+		// Hapus struktur flex row, ganti jadi block agar flow element berjalan natural
+		<div className="my-6 font-mono text-sm block relative">
+			{/* IMAGE SECTION 
+               Perubahan Layout: Ditambahkan `md:float-left`, `md:mr-8`, `md:mb-4`.
+               Ini membuat elemen ini "mengambang" di kiri, dan teks berikutnya akan mengelilinginya.
+            */}
+			<div className="flex-shrink-0 group/section md:float-left md:mr-8 md:mb-4 mx-auto md:mx-0 w-fit">
+				<div className="relative">
+					{/* Subtle corner accents - Tetap dipertahankan */}
+					<div className="absolute -top-1 -left-1 w-3 h-3 border-l border-t border-zinc-700 opacity-0 group-hover/section:opacity-100 transition-opacity duration-300"></div>
+					<div className="absolute -top-1 -right-1 w-3 h-3 border-r border-t border-zinc-700 opacity-0 group-hover/section:opacity-100 transition-opacity duration-300"></div>
+					<div className="absolute -bottom-1 -left-1 w-3 h-3 border-l border-b border-zinc-700 opacity-0 group-hover/section:opacity-100 transition-opacity duration-300"></div>
+					<div className="absolute -bottom-1 -right-1 w-3 h-3 border-r border-b border-zinc-700 opacity-0 group-hover/section:opacity-100 transition-opacity duration-300"></div>
 
-						<div className="relative w-52 h-52 rounded overflow-hidden border border-zinc-800 group/avatar bg-zinc-900 p-2">
-							{/* Scanline effect on hover */}
-							<div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent h-full w-full translate-y-[-100%] group-hover/avatar:translate-y-[100%] transition-transform duration-1000 ease-linear pointer-events-none z-10"></div>
+					<div className="relative w-52 h-52 rounded overflow-hidden border border-zinc-800 group/avatar bg-zinc-900 p-2">
+						{/* Scanline effect on hover - Tetap dipertahankan */}
+						<div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/5 to-transparent h-full w-full translate-y-[-100%] group-hover/avatar:translate-y-[100%] transition-transform duration-1000 ease-linear pointer-events-none z-10"></div>
 
-							{/* Photo - centered with equal margins */}
-							<div className="relative w-full h-full">
-								<Image
-									src="/assets/images/profile.webp"
-									alt="Profile"
-									fill
+						{/* Photo - centered with equal margins */}
+						<div className="relative w-full h-full">
+							<Image
+								src="/assets/images/profile.webp"
+								alt="Profile"
+								fill
 								sizes="(max-width: 768px) 128px, 256px"
-									className={`object-cover rounded grayscale group-hover/avatar:grayscale-0 transition-all duration-500 ${
-										imageLoaded ? "opacity-100" : "opacity-0"
-									}`}
-									onLoad={() => setImageLoaded(true)}
-									priority
-								/>
-							</div>
-
-							{/* Subtle overlay */}
-							<div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-300"></div>
+								className={`object-cover rounded grayscale group-hover/avatar:grayscale-0 transition-all duration-500 ${
+									imageLoaded ? "opacity-100" : "opacity-0"
+								}`}
+								onLoad={() => setImageLoaded(true)}
+								priority
+							/>
 						</div>
-					</div>
 
-					{/* Available text below photo */}
-					<div className="mt-2 text-xs flex items-center gap-2 text-zinc-500">
-						<div className="relative flex items-center">
-							<span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-							<span className="absolute w-1.5 h-1.5 bg-green-500 rounded-full animate-ping"></span>
-						</div>
-						<span>Available for opportunities</span>
+						{/* Subtle overlay */}
+						<div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-300"></div>
 					</div>
 				</div>
 
-				{/* Right Column: Info - Only Header */}
-				<div className="flex-1">
-					{/* Header */}
-					<div className="relative border-b border-zinc-800 pb-3 group/header">
-						<div className="absolute bottom-0 left-0 h-[1px] w-0 bg-gradient-to-r from-zinc-500 to-transparent group-hover/header:w-full transition-all duration-500"></div>
-						<h2 className="text-lg font-bold text-zinc-200 mb-1 tracking-tight">
-							Felix Gratia Mangatur Manullang
-						</h2>
-						<div className="flex items-center gap-2 text-xs">
-							<span className="text-zinc-200">Backend Developer</span>
-							<span className="text-zinc-700">•</span>
-							<span className="text-zinc-400">GPA 3.94/4.0</span>
-						</div>
+				{/* Available text below photo */}
+				<div className="mt-2 text-xs flex items-center justify-center md:justify-start gap-2 text-zinc-500 mb-6 md:mb-0">
+					<div className="relative flex items-center">
+						<span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+						<span className="absolute w-1.5 h-1.5 bg-green-500 rounded-full animate-ping"></span>
 					</div>
+					<span>Available for opportunities</span>
 				</div>
 			</div>
 
-			{/* Bottom Section: 2 Columns aligned with photo */}
-			<div className="flex gap-8 mt-5">
-				{/* Left Column: Aligned with photo (same width) */}
-				<div className="w-32 flex-shrink-0">
-					{/* Empty space to align with photo */}
+			{/* CONTENT SECTION
+               Karena gambar di-float, div ini tidak perlu ada di kolom kanan terpisah.
+               Isinya akan otomatis mengisi ruang di samping gambar, lalu membungkus ke bawah (wrap)
+               saat tinggi gambar habis.
+            */}
+			<div className="space-y-5 text-justify md:text-left">
+				{/* Header */}
+				<div className="relative border-b border-zinc-800 pb-3 group/header">
+					<div className="absolute bottom-0 left-0 h-[1px] w-0 bg-gradient-to-r from-zinc-500 to-transparent group-hover/header:w-full transition-all duration-500"></div>
+					<h2 className="text-lg font-bold text-zinc-200 mb-1 tracking-tight">
+						Felix Gratia Mangatur Manullang
+					</h2>
+					<div className="flex items-center gap-2 text-xs flex-wrap">
+						<span className="text-zinc-200">Backend Developer</span>
+						<span className="text-zinc-700">•</span>
+						<span className="text-zinc-400">GPA 3.94/4.0</span>
+					</div>
 				</div>
 
-				{/* Right Column: Full content */}
-				<div className="flex-1 space-y-5">
-					{/* Info Grid */}
+				{/* Info Grid - Langsung mengalir di bawah Header */}
+				<div className="space-y-2.5">
+					<InfoRow label="Location" value="Tangerang, Banten" icon="📍" />
+					<InfoRow
+						label="Education"
+						value="Polytechnic Multimedia Nusantara (2022 - Present)"
+						icon="🎓"
+					/>
+					<InfoRow
+						label="Current"
+						value="Intern at PT Samanasoft Inovasi Persada"
+						icon="💼"
+					/>
+					<InfoRow
+						label="Previous"
+						value="Intern at Alfagift (PT Global Loyalty Indonesia)"
+						icon="🏢"
+					/>
+				</div>
+
+				{/* Bio */}
+				<div className="pt-4 border-t border-zinc-800 group/bio">
+					<p className="text-zinc-400 leading-relaxed text-xs group-hover/bio:text-zinc-300 transition-colors duration-300">
+						High-performing Backend Developer with expertise in architecting
+						scalable systems using Python (FastAPI), PostgreSQL, and Docker.
+						Experience building multi-tenant SaaS platforms, RAG-based AI
+						solutions, and secure SSO authentication services.
+					</p>
+				</div>
+
+				{/* Key Projects */}
+				<div className="pt-4 border-t border-zinc-800">
+					<h3 className="text-xs text-zinc-200 uppercase tracking-wider mb-3">
+						Key Projects
+					</h3>
 					<div className="space-y-2.5">
-						<InfoRow label="Location" value="Tangerang, Banten" icon="📍" />
-						<InfoRow
-							label="Education"
-							value="Polytechnic Multimedia Nusantara (2022 - Present)"
-							icon="🎓"
+						<ProjectItem
+							name="ATABOT"
+							desc="Universal Business Intelligence AI with RAG-based system"
 						/>
-						<InfoRow
-							label="Current"
-							value="Intern at PT Samanasoft Inovasi Persada"
-							icon="💼"
+						<ProjectItem
+							name="ATLAS"
+							desc="SSO Authentication & Authorization Service with RBAC"
 						/>
-						<InfoRow
-							label="Previous"
-							value="Intern at Alfagift (PT Global Loyalty Indonesia)"
-							icon="🏢"
+						<ProjectItem
+							name="AVENTORY"
+							desc="End-to-end Inventory Management System"
 						/>
 					</div>
+				</div>
 
-					{/* Bio */}
-					<div className="pt-4 border-t border-zinc-800 group/bio">
-						<p className="text-zinc-400 leading-relaxed text-xs group-hover/bio:text-zinc-300 transition-colors duration-300">
-							High-performing Backend Developer with expertise in architecting
-							scalable systems using Python (FastAPI), PostgreSQL, and Docker.
-							Experience building multi-tenant SaaS platforms, RAG-based AI
-							solutions, and secure SSO authentication services.
-						</p>
-					</div>
-
-					{/* Key Projects */}
-					<div className="pt-4 border-t border-zinc-800">
-						<h3 className="text-xs text-zinc-200 uppercase tracking-wider mb-3">
-							Key Projects
-						</h3>
-						<div className="space-y-2.5">
-							<ProjectItem
-								name="ATABOT"
-								desc="Universal Business Intelligence AI with RAG-based system"
-							/>
-							<ProjectItem
-								name="ATLAS"
-								desc="SSO Authentication & Authorization Service with RBAC"
-							/>
-							<ProjectItem
-								name="AVENTORY"
-								desc="End-to-end Inventory Management System"
-							/>
-						</div>
-					</div>
-
-					{/* Tech Stack */}
-					<div className="pt-4 border-t border-zinc-800">
-						<h3 className="text-xs text-zinc-200 uppercase tracking-wider mb-3">
-							Tech Stack
-						</h3>
-						<div className="flex flex-wrap gap-2">
-							<TechBadge>Python</TechBadge>
-							<TechBadge>FastAPI</TechBadge>
-							<TechBadge>PostgreSQL</TechBadge>
-							<TechBadge>Docker</TechBadge>
-							<TechBadge>Go</TechBadge>
-							<TechBadge>Redis</TechBadge>
-							<TechBadge>MongoDB</TechBadge>
-						</div>
+				{/* Tech Stack */}
+				<div className="pt-4 border-t border-zinc-800">
+					<h3 className="text-xs text-zinc-200 uppercase tracking-wider mb-3">
+						Tech Stack
+					</h3>
+					<div className="flex flex-wrap gap-2">
+						<TechBadge>Python</TechBadge>
+						<TechBadge>FastAPI</TechBadge>
+						<TechBadge>PostgreSQL</TechBadge>
+						<TechBadge>Docker</TechBadge>
+						<TechBadge>Go</TechBadge>
+						<TechBadge>Redis</TechBadge>
+						<TechBadge>MongoDB</TechBadge>
 					</div>
 				</div>
 			</div>
+
+			{/* Clearfix untuk jaga-jaga jika konten lebih pendek dari gambar */}
+			<div className="clear-both"></div>
 		</div>
 	);
 };
 
-// Helper Components
+// Helper Components (TIDAK DIUBAH)
 const InfoRow = ({
 	label,
 	value,
