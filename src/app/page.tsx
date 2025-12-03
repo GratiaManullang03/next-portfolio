@@ -14,6 +14,7 @@ import Browser from "@/components/Browser/Browser";
 import Preloader from "@/components/Preloader";
 import Background from "@/components/Background";
 import { LoadingProvider } from "@/contexts/LoadingContext";
+import { useLenis } from "@/hooks/useLenis";
 
 interface CommandEntry {
 	command: string;
@@ -26,6 +27,12 @@ export default function Home() {
 	const [showTerminal, setShowTerminal] = useState(false);
 	const scrollRef = useRef<HTMLDivElement>(null);
 	const commandIdRef = useRef(0);
+
+	// Initialize Lenis for smooth scrolling on terminal
+	useLenis(scrollRef, {
+		duration: 1.2,
+		smoothWheel: true,
+	});
 
 	const handleCommand = (command: string) => {
 		commandIdRef.current += 1;
