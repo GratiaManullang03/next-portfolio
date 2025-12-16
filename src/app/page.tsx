@@ -30,8 +30,12 @@ export default function Home() {
 
 	// Initialize Lenis for smooth scrolling on terminal
 	const lenisRef = useLenis(scrollRef, {
-		duration: 1.2,
+		duration: 0.5,
 		smoothWheel: true,
+		wheelMultiplier: 0.5,
+		touchMultiplier: 1,
+		infinite: false,
+		syncTouch: false,
 	});
 
 	const handleCommand = (command: string) => {
@@ -63,14 +67,41 @@ export default function Home() {
 
 	// Smooth scroll to bottom using Lenis
 	useEffect(() => {
-		if (scrollRef.current && lenisRef.current) {
-			// Use Lenis scrollTo instead of native scrollTop
-			lenisRef.current.scrollTo(scrollRef.current.scrollHeight, {
-				immediate: false,
-				duration: 0.5,
-			});
-		}
-	}, [commands, lenisRef]);
+		if (commands.length === 0) return;
+
+		// Multiple delays untuk memastikan DOM fully rendered
+		const timer1 = setTimeout(() => {
+			if (scrollRef.current && lenisRef.current) {
+				// Force Lenis to recalculate dimensions
+				lenisRef.current.resize();
+			}
+		}, 50);
+
+		const timer2 = setTimeout(() => {
+			if (scrollRef.current) {
+				const scrollElement = scrollRef.current;
+				const contentElement = scrollElement.firstElementChild as HTMLElement;
+
+				if (contentElement) {
+					// Calculate exact scroll target
+					const targetScroll = contentElement.scrollHeight;
+
+					// Try Lenis first
+					if (lenisRef.current) {
+						lenisRef.current.scrollTo(targetScroll, {
+							immediate: false,
+							duration: 1.2,
+						});
+					}
+				}
+			}
+		}, 150);
+
+		return () => {
+			clearTimeout(timer1);
+			clearTimeout(timer2);
+		};
+	}, [commands]);
 
 	return (
 		<LoadingProvider>
@@ -113,22 +144,24 @@ export default function Home() {
 							ref={scrollRef}
 							className="flex-1 overflow-y-auto scrollbar-hide px-[20px]"
 						>
-							<TerminalOutput />
-							{commands.map((entry) => (
-								<div key={entry.id}>
-									<div className="text-[#6b7280] mb-2 font-mono text-[13px]">
-										<span className="text-[#a855f7] mr-[6px] font-bold text-[18px]">
-											❯
-										</span>{" "}
-										{entry.command}
+							<div>
+								<TerminalOutput />
+								{commands.map((entry) => (
+									<div key={entry.id}>
+										<div className="text-[#9ca3af] mb-2 font-mono text-[13px]">
+											<span className="text-[#a855f7] mr-[6px] font-bold text-[18px]">
+												❯
+											</span>{" "}
+											{entry.command}
+										</div>
+										<CommandOutput
+											command={entry.command}
+											isBrowserRunning={browserCommand === entry.command}
+										/>
 									</div>
-									<CommandOutput
-										command={entry.command}
-										isBrowserRunning={browserCommand === entry.command}
-									/>
-								</div>
-							))}
-							{!browserCommand && <Prompt onCommand={handleCommand} />}
+								))}
+								{!browserCommand && <Prompt onCommand={handleCommand} />}
+							</div>
 						</div>
 					</div>
 				</TerminalContainer>

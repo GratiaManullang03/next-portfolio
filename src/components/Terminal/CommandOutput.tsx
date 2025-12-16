@@ -41,7 +41,7 @@ export default function CommandOutput({
 					{COMMANDS.map((cmd) => (
 						<div key={cmd.name} className="mb-1">
 							<span className="text-[#a855f7]">{cmd.name}</span>
-							<span className="text-[#6b7280]"> - {cmd.description}</span>
+							<span className="text-[#d1d5db]"> - {cmd.description}</span>
 						</div>
 					))}
 				</div>
@@ -54,27 +54,27 @@ export default function CommandOutput({
 		const commandName = lowerCommand.replace("/", "");
 		return (
 			<div className="mb-4 font-mono text-[13px]">
-				<div className="text-[#6b7280]">$ graxya run {commandName}</div>
-				<div className="text-[#6b7280] mt-1">
+				<div className="text-[#9ca3af]">$ graxya run {commandName}</div>
+				<div className="text-[#d1d5db] mt-1">
 					<span className="text-[#fbbf24]">⚠</span> Warning: You&apos;re about
 					to see something cool.
 				</div>
-				<div className="text-[#6b7280]">
+				<div className="text-[#d1d5db]">
 					{" "}
 					Don&apos;t blame me if you get impressed.
 				</div>
-				<div className="text-[#6b7280] mt-2">
+				<div className="text-[#9ca3af] mt-2">
 					<span className="text-[#a855f7]">▲</span> Graxya.Portfolio v1.0.0
 					(Turbo Mode)
 				</div>
-				<div className="text-[#6b7280]">
+				<div className="text-[#9ca3af]">
 					{" "}
 					- Local:{" "}
 					<span className="text-[#06b6d4]">
 						https://graxya.dev/{commandName}
 					</span>
 				</div>
-				<div className="text-[#6b7280]">
+				<div className="text-[#9ca3af]">
 					{" "}
 					- Network: <span className="text-[#06b6d4]">everywhere</span>
 				</div>
@@ -98,7 +98,7 @@ export default function CommandOutput({
 	if (lowerCommand === "/social") {
 		return (
 			<div className="mb-4 font-mono text-[13px]">
-				<div className="text-[#6b7280] mb-3">$ cat socials.txt</div>
+				<div className="text-[#9ca3af] mb-3">$ cat socials.txt</div>
 
 				<div className="text-[#06b6d4] mb-3">Connect with me:</div>
 
@@ -195,7 +195,7 @@ export default function CommandOutput({
 					</a>
 				</div>
 
-				<div className="text-[#6b7280] mt-4 text-[11px]">
+				<div className="text-[#9ca3af] mt-4 text-[11px]">
 					Feel free to reach out! I don&apos;t bite... usually.
 				</div>
 			</div>
@@ -219,7 +219,7 @@ export default function CommandOutput({
 			<div className="text-[#ef4444]">
 				Command not found: <span className="text-[#f472b6]">{command}</span>
 			</div>
-			<div className="text-[#6b7280]">
+			<div className="text-[#d1d5db]">
 				Type <span className="text-[#06b6d4]">/command</span> to see the list of
 				available commands.
 			</div>

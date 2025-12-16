@@ -52,15 +52,36 @@ export default function Prompt({ onCommand }: PromptProps) {
 
 	// Re-focus when clicking anywhere on the page
 	useEffect(() => {
-		const handleGlobalClick = () => {
-			// Only focus if not already focused to avoid conflicts
-			if (document.activeElement !== inputRef.current) {
-				inputRef.current?.focus();
+		const handleGlobalClick = (e: MouseEvent) => {
+			// Don't focus if clicking on links or buttons
+			const target = e.target as HTMLElement;
+			if (
+				target.tagName === 'A' ||
+				target.tagName === 'BUTTON' ||
+				target.closest('a') ||
+				target.closest('button')
+			) {
+				return;
+			}
+
+			// Focus and smooth scroll to input
+			if (inputRef.current) {
+				// Focus first
+				inputRef.current.focus({ preventScroll: true });
+
+				// Then smooth scroll to input using scrollIntoView
+				setTimeout(() => {
+					inputRef.current?.scrollIntoView({
+						behavior: 'smooth',
+						block: 'end',
+						inline: 'nearest'
+					});
+				}, 10);
 			}
 		};
 
-		window.addEventListener("click", handleGlobalClick);
-		return () => window.removeEventListener("click", handleGlobalClick);
+		window.addEventListener("click", handleGlobalClick, true); // Use capture phase
+		return () => window.removeEventListener("click", handleGlobalClick, true);
 	}, []);
 
 	useEffect(() => {

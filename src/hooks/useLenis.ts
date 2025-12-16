@@ -19,9 +19,15 @@ export function useLenis(
 	options: UseLenisOptions = {}
 ) {
 	const lenisRef = useRef<Lenis | null>(null);
+	const rafIdRef = useRef<number | null>(null);
 
 	useEffect(() => {
 		if (!containerRef.current) return;
+
+		// Destroy previous instance if exists
+		if (lenisRef.current) {
+			lenisRef.current.destroy();
+		}
 
 		const lenis = new Lenis({
 			wrapper: containerRef.current,
@@ -42,16 +48,25 @@ export function useLenis(
 
 		function raf(time: number) {
 			lenis.raf(time);
-			requestAnimationFrame(raf);
+			rafIdRef.current = requestAnimationFrame(raf);
 		}
 
-		requestAnimationFrame(raf);
+		rafIdRef.current = requestAnimationFrame(raf);
 
 		return () => {
+			if (rafIdRef.current !== null) {
+				cancelAnimationFrame(rafIdRef.current);
+			}
 			lenis.destroy();
 			lenisRef.current = null;
 		};
-	}, [containerRef, options]);
+	}, [
+		containerRef,
+		options.duration,
+		options.smoothWheel,
+		options.wheelMultiplier,
+		options.touchMultiplier,
+	]);
 
 	return lenisRef;
 }
