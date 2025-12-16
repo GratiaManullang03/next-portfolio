@@ -1,13 +1,21 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FiDownload, FiArrowLeft, FiExternalLink } from "react-icons/fi";
 import Link from "next/link";
 
 export default function CurriculumVitae() {
 	const [isLoading, setIsLoading] = useState(true);
 	const pdfUrl = "/files/CV-FelixGratiaMangaturManullang.pdf";
+
+	// Hide loading after 1.5 seconds regardless of load event
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setIsLoading(false);
+		}, 1500);
+		return () => clearTimeout(timer);
+	}, []);
 
 	const handleDownload = () => {
 		const link = document.createElement("a");

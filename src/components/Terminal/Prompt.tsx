@@ -97,6 +97,14 @@ export default function Prompt({
 
 	// Update matches and suggestion based on input
 	useEffect(() => {
+		// Don't show dropdown when navigating history
+		if (historyIndex >= 0) {
+			setSuggestion("");
+			setShowDropdown(false);
+			setMatches([]);
+			return;
+		}
+
 		if (input && input.length >= 2) {
 			const foundMatches = findMatchingCommands(input);
 			setMatches(foundMatches);
@@ -128,12 +136,15 @@ export default function Prompt({
 			setShowDropdown(false);
 			setMatches([]);
 		}
-	}, [input]);
+	}, [input, historyIndex]);
 
-	// Reset history index when input changes manually
-	useEffect(() => {
-		setHistoryIndex(-1);
-	}, [input]);
+	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setInput(e.target.value);
+		// Reset history index when user types manually
+		if (historyIndex >= 0) {
+			setHistoryIndex(-1);
+		}
+	};
 
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
 		// Handle dropdown navigation
@@ -207,7 +218,7 @@ export default function Prompt({
 	};
 
 	return (
-		<div className="relative">
+		<div className="relative mb-2">
 			{/* Fuzzy Search Dropdown */}
 			<AnimatePresence>
 				{showDropdown && matches.length > 0 && (
@@ -216,8 +227,8 @@ export default function Prompt({
 						animate={{ opacity: 1, y: 0, scale: 1 }}
 						exit={{ opacity: 0, y: -10, scale: 0.95 }}
 						transition={{ duration: 0.15 }}
-						className="absolute bottom-full left-0 mb-2 w-full max-w-[500px] bg-[#1a1a1a]/95
-							backdrop-blur-sm border border-[#333] rounded-lg shadow-2xl overflow-hidden z-50"
+						className="absolute bottom-full left-0 mb-3 w-full max-w-[500px] bg-[#1a1a1a]/95
+							backdrop-blur-sm border border-[#333] rounded-lg shadow-2xl overflow-hidden z-[100]"
 					>
 						<div className="max-h-[300px] overflow-y-auto">
 							{matches.map((cmd, index) => (
