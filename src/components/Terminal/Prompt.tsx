@@ -8,12 +8,14 @@ interface PromptProps {
 	onCommand?: (command: string) => void;
 	commandHistory?: string[];
 	disabled?: boolean;
+	onDropdownChange?: (isOpen: boolean) => void;
 }
 
 export default function Prompt({
 	onCommand,
 	commandHistory = [],
 	disabled = false,
+	onDropdownChange,
 }: PromptProps) {
 	const [time, setTime] = useState("");
 	const [mounted, setMounted] = useState(false);
@@ -25,6 +27,7 @@ export default function Prompt({
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const [historyIndex, setHistoryIndex] = useState(-1);
 	const inputRef = useRef<HTMLInputElement>(null);
+	const dropdownRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		setMounted(true);
@@ -75,8 +78,8 @@ export default function Prompt({
 				return;
 			}
 
-			// Focus and smooth scroll to input
-			if (inputRef.current) {
+			// Focus and smooth scroll to input (but not when dropdown is showing)
+			if (inputRef.current && !showDropdown) {
 				// Focus first
 				inputRef.current.focus({ preventScroll: true });
 
@@ -88,12 +91,15 @@ export default function Prompt({
 						inline: 'nearest'
 					});
 				}, 10);
+			} else if (inputRef.current && showDropdown) {
+				// Just focus without scrolling when dropdown is showing
+				inputRef.current.focus({ preventScroll: true });
 			}
 		};
 
 		window.addEventListener("click", handleGlobalClick, true); // Use capture phase
 		return () => window.removeEventListener("click", handleGlobalClick, true);
-	}, []);
+	}, [showDropdown]);
 
 	// Update matches and suggestion based on input
 	useEffect(() => {
@@ -137,6 +143,27 @@ export default function Prompt({
 			setMatches([]);
 		}
 	}, [input, historyIndex]);
+
+	// Auto scroll to bottom when dropdown FIRST appears (not on every update)
+	useEffect(() => {
+		if (showDropdown && dropdownRef.current && matches.length > 0) {
+			// Only scroll on first appearance
+			const timer = setTimeout(() => {
+				dropdownRef.current?.scrollIntoView({
+					behavior: 'smooth',
+					block: 'end',
+					inline: 'nearest'
+				});
+			}, 150);
+			return () => clearTimeout(timer);
+		}
+	}, [showDropdown, matches.length]);
+
+	// Notify parent when dropdown state changes
+	useEffect(() => {
+		onDropdownChange?.(showDropdown);
+	}, [showDropdown, onDropdownChange]);
+
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setInput(e.target.value);
@@ -223,12 +250,14 @@ export default function Prompt({
 			<AnimatePresence>
 				{showDropdown && matches.length > 0 && (
 					<motion.div
-						initial={{ opacity: 0, y: -10, scale: 0.95 }}
+						ref={dropdownRef}
+						initial={{ opacity: 0, y: 10, scale: 0.95 }}
 						animate={{ opacity: 1, y: 0, scale: 1 }}
-						exit={{ opacity: 0, y: -10, scale: 0.95 }}
+						exit={{ opacity: 0, y: 10, scale: 0.95 }}
 						transition={{ duration: 0.15 }}
-						className="absolute bottom-full left-0 mb-3 w-full max-w-[500px] bg-[#1a1a1a]/95
-							backdrop-blur-sm border border-[#333] rounded-lg shadow-2xl overflow-hidden z-[100]"
+						className="absolute top-full left-0 mt-3 w-full max-w-[500px] bg-[#1a1a1a]/95 backdrop-blur-sm border border-[#333] rounded-lg shadow-2xl overflow-hidden z-[9999]"
+						onWheel={(e) => e.stopPropagation()}
+						onTouchMove={(e) => e.stopPropagation()}
 					>
 						<div className="max-h-[300px] overflow-y-auto">
 							{matches.map((cmd, index) => (
@@ -431,7 +460,7 @@ export default function Prompt({
 							ref={inputRef}
 							type="text"
 							value={input}
-							onChange={(e) => setInput(e.target.value)}
+							onChange={handleInputChange}
 							onKeyDown={handleKeyDown}
 							disabled={disabled}
 							className="bg-transparent border-none outline-none text-[#e5e7eb] text-[11px] md:text-[12px] lg:text-[13px] font-mono w-full caret-transparent absolute left-0 h-full leading-none disabled:opacity-50 disabled:cursor-not-allowed"

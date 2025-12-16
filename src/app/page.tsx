@@ -28,6 +28,7 @@ function HomeContent() {
 	const [commandHistory, setCommandHistory] = useState<string[]>([]);
 	const [browserCommand, setBrowserCommand] = useState<string | null>(null);
 	const [showTerminal, setShowTerminal] = useState(false);
+	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 	const scrollRef = useRef<HTMLDivElement>(null);
 	const commandIdRef = useRef(0);
 	const { isTerminalReady } = useLoading();
@@ -185,7 +186,7 @@ function HomeContent() {
 							ref={scrollRef}
 							className="flex-1 overflow-y-auto scrollbar-hide px-[20px]"
 						>
-							<div>
+							<div className={isDropdownOpen ? "pb-[250px]" : ""}>
 								<TerminalOutput />
 								{commands.map((entry) => (
 									<div key={entry.id}>
@@ -206,6 +207,7 @@ function HomeContent() {
 										onCommand={handleCommand}
 										commandHistory={commandHistory}
 										disabled={!isTerminalReady}
+										onDropdownChange={setIsDropdownOpen}
 									/>
 								)}
 							</div>
