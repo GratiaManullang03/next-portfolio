@@ -1,18 +1,29 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { findMatchingCommands } from "@/constants/commands";
+import { findMatchingCommands, Command } from "@/constants/commands";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface PromptProps {
 	onCommand?: (command: string) => void;
+	commandHistory?: string[];
+	disabled?: boolean;
 }
 
-export default function Prompt({ onCommand }: PromptProps) {
+export default function Prompt({
+	onCommand,
+	commandHistory = [],
+	disabled = false,
+}: PromptProps) {
 	const [time, setTime] = useState("");
 	const [mounted, setMounted] = useState(false);
 	const [input, setInput] = useState("");
 	const [suggestion, setSuggestion] = useState("");
 	const [isMobile, setIsMobile] = useState(false);
+	const [showDropdown, setShowDropdown] = useState(false);
+	const [matches, setMatches] = useState<Command[]>([]);
+	const [selectedIndex, setSelectedIndex] = useState(0);
+	const [historyIndex, setHistoryIndex] = useState(-1);
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
@@ -84,24 +95,106 @@ export default function Prompt({ onCommand }: PromptProps) {
 		return () => window.removeEventListener("click", handleGlobalClick, true);
 	}, []);
 
+	// Update matches and suggestion based on input
 	useEffect(() => {
-		if (input) {
-			const matches = findMatchingCommands(input);
-			if (matches.length > 0 && matches[0].name !== input.toLowerCase()) {
-				setSuggestion(matches[0].name);
+		if (input && input.length >= 2) {
+			const foundMatches = findMatchingCommands(input);
+			setMatches(foundMatches);
+			setShowDropdown(foundMatches.length > 0);
+			setSelectedIndex(0);
+
+			if (
+				foundMatches.length > 0 &&
+				foundMatches[0].name !== input.toLowerCase()
+			) {
+				setSuggestion(foundMatches[0].name);
 			} else {
 				setSuggestion("");
 			}
+		} else if (input && input.length === 1) {
+			const foundMatches = findMatchingCommands(input);
+			if (
+				foundMatches.length > 0 &&
+				foundMatches[0].name !== input.toLowerCase()
+			) {
+				setSuggestion(foundMatches[0].name);
+			} else {
+				setSuggestion("");
+			}
+			setShowDropdown(false);
+			setMatches([]);
 		} else {
 			setSuggestion("");
+			setShowDropdown(false);
+			setMatches([]);
 		}
 	}, [input]);
 
+	// Reset history index when input changes manually
+	useEffect(() => {
+		setHistoryIndex(-1);
+	}, [input]);
+
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+		// Handle dropdown navigation
+		if (showDropdown && matches.length > 0) {
+			if (e.key === "ArrowDown") {
+				e.preventDefault();
+				setSelectedIndex((prev) =>
+					prev < matches.length - 1 ? prev + 1 : prev
+				);
+				return;
+			} else if (e.key === "ArrowUp" && selectedIndex > 0) {
+				e.preventDefault();
+				setSelectedIndex((prev) => (prev > 0 ? prev - 1 : prev));
+				return;
+			} else if (e.key === "Enter") {
+				e.preventDefault();
+				const selectedCommand = matches[selectedIndex].name;
+				setInput(selectedCommand);
+				setShowDropdown(false);
+				onCommand?.(selectedCommand);
+				setInput("");
+				setSuggestion("");
+				setHistoryIndex(-1);
+				return;
+			} else if (e.key === "Escape") {
+				setShowDropdown(false);
+				return;
+			}
+		}
+
+		// Handle command history navigation
+		if (e.key === "ArrowUp") {
+			e.preventDefault();
+			if (commandHistory.length > 0) {
+				const newIndex =
+					historyIndex < commandHistory.length - 1
+						? historyIndex + 1
+						: historyIndex;
+				setHistoryIndex(newIndex);
+				setInput(commandHistory[newIndex]);
+			}
+			return;
+		} else if (e.key === "ArrowDown") {
+			e.preventDefault();
+			if (historyIndex > 0) {
+				const newIndex = historyIndex - 1;
+				setHistoryIndex(newIndex);
+				setInput(commandHistory[newIndex]);
+			} else if (historyIndex === 0) {
+				setHistoryIndex(-1);
+				setInput("");
+			}
+			return;
+		}
+
+		// Handle enter
 		if (e.key === "Enter" && input.trim()) {
 			onCommand?.(input.trim());
 			setInput("");
 			setSuggestion("");
+			setHistoryIndex(-1);
 		} else if ((e.key === "Tab" || e.key === "ArrowRight") && suggestion) {
 			e.preventDefault();
 			setInput(suggestion);
@@ -114,7 +207,67 @@ export default function Prompt({ onCommand }: PromptProps) {
 	};
 
 	return (
-		<div>
+		<div className="relative">
+			{/* Fuzzy Search Dropdown */}
+			<AnimatePresence>
+				{showDropdown && matches.length > 0 && (
+					<motion.div
+						initial={{ opacity: 0, y: -10, scale: 0.95 }}
+						animate={{ opacity: 1, y: 0, scale: 1 }}
+						exit={{ opacity: 0, y: -10, scale: 0.95 }}
+						transition={{ duration: 0.15 }}
+						className="absolute bottom-full left-0 mb-2 w-full max-w-[500px] bg-[#1a1a1a]/95
+							backdrop-blur-sm border border-[#333] rounded-lg shadow-2xl overflow-hidden z-50"
+					>
+						<div className="max-h-[300px] overflow-y-auto">
+							{matches.map((cmd, index) => (
+								<button
+									key={cmd.name}
+									onClick={() => {
+										setInput(cmd.name);
+										setShowDropdown(false);
+										onCommand?.(cmd.name);
+										setInput("");
+										setSuggestion("");
+									}}
+									disabled={disabled}
+									className={`w-full text-left px-4 py-3 transition-all duration-150
+										${index === selectedIndex ? "bg-[#2a2a2a]" : "hover:bg-[#222]"}
+										${index !== matches.length - 1 ? "border-b border-[#2a2a2a]" : ""}
+										${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+								>
+									<div className="flex items-center justify-between mb-1">
+										<div className="flex items-center gap-2">
+											{index === selectedIndex && (
+												<span className="text-[#a855f7] text-xs">↑</span>
+											)}
+											<span className="text-[#06b6d4] font-mono text-sm font-semibold">
+												{cmd.name}
+											</span>
+										</div>
+										<span className="text-[#f472b6] font-mono text-xs px-2 py-1 bg-[#222] rounded border border-[#333]">
+											{cmd.shortcutKey}
+										</span>
+									</div>
+									<p className="text-[#999] text-xs pl-5">{cmd.description}</p>
+								</button>
+							))}
+						</div>
+						<div className="px-4 py-2 bg-[#222] border-t border-[#333] text-center">
+							<p className="text-[#666] text-xs">
+								{historyIndex >= 0 ? (
+									<span>
+										History {historyIndex + 1}/{commandHistory.length}
+									</span>
+								) : (
+									<span>↑↓ Navigate • Enter Select • Esc Close</span>
+								)}
+							</p>
+						</div>
+					</motion.div>
+				)}
+			</AnimatePresence>
+
 			{/* Row 1 - Desktop (>=1024px): Full size with Path and Time */}
 			<div className="hidden lg:flex items-center w-full h-[34px] relative">
 				{/* Bracket Left */}
@@ -269,7 +422,8 @@ export default function Prompt({ onCommand }: PromptProps) {
 							value={input}
 							onChange={(e) => setInput(e.target.value)}
 							onKeyDown={handleKeyDown}
-							className="bg-transparent border-none outline-none text-[#e5e7eb] text-[11px] md:text-[12px] lg:text-[13px] font-mono w-full caret-transparent absolute left-0 h-full leading-none"
+							disabled={disabled}
+							className="bg-transparent border-none outline-none text-[#e5e7eb] text-[11px] md:text-[12px] lg:text-[13px] font-mono w-full caret-transparent absolute left-0 h-full leading-none disabled:opacity-50 disabled:cursor-not-allowed"
 							spellCheck={false}
 							autoComplete="off"
 						/>

@@ -13,20 +13,24 @@ import CommandOutput, {
 import Browser from "@/components/Browser/Browser";
 import Preloader from "@/components/Preloader";
 import Background from "@/components/Background";
-import { LoadingProvider } from "@/contexts/LoadingContext";
+import ShortcutPanel from "@/components/Terminal/ShortcutPanel";
+import { LoadingProvider, useLoading } from "@/contexts/LoadingContext";
 import { useLenis } from "@/hooks/useLenis";
+import { COMMANDS } from "@/constants/commands";
 
 interface CommandEntry {
 	command: string;
 	id: number;
 }
 
-export default function Home() {
+function HomeContent() {
 	const [commands, setCommands] = useState<CommandEntry[]>([]);
+	const [commandHistory, setCommandHistory] = useState<string[]>([]);
 	const [browserCommand, setBrowserCommand] = useState<string | null>(null);
 	const [showTerminal, setShowTerminal] = useState(false);
 	const scrollRef = useRef<HTMLDivElement>(null);
 	const commandIdRef = useRef(0);
+	const { isTerminalReady } = useLoading();
 
 	// Initialize Lenis for smooth scrolling on terminal
 	const lenisRef = useLenis(scrollRef, {
@@ -39,8 +43,21 @@ export default function Home() {
 	});
 
 	const handleCommand = (command: string) => {
+		// Handle clear command
+		if (command.toLowerCase() === "clear") {
+			setCommands([]);
+			setCommandHistory([]);
+			return;
+		}
+
 		commandIdRef.current += 1;
 		setCommands((prev) => [...prev, { command, id: commandIdRef.current }]);
+
+		// Update command history (no duplicates, newest first)
+		setCommandHistory((prev) => {
+			const filtered = prev.filter((cmd) => cmd !== command);
+			return [command, ...filtered];
+		});
 
 		// Check if it's a browser command
 		if (isBrowserCommand(command)) {
@@ -52,18 +69,35 @@ export default function Home() {
 		setBrowserCommand(null);
 	};
 
-	// Handle Ctrl+C to close browser
+	// Handle keyboard shortcuts (Ctrl+C and Ctrl+1-9)
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
+			// Don't trigger shortcuts if input is disabled (preload)
+			if (!isTerminalReady) return;
+
+			// Ctrl+C to close browser
 			if (e.ctrlKey && e.key === "c" && browserCommand) {
 				e.preventDefault();
 				handleCloseBrowser();
+				return;
+			}
+
+			// Ctrl+1 to Ctrl+9 for command shortcuts
+			if (e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey) {
+				const num = parseInt(e.key);
+				if (num >= 1 && num <= 9) {
+					e.preventDefault();
+					const commandIndex = num - 1;
+					if (COMMANDS[commandIndex]) {
+						handleCommand(COMMANDS[commandIndex].name);
+					}
+				}
 			}
 		};
 
 		window.addEventListener("keydown", handleKeyDown);
 		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [browserCommand]);
+	}, [browserCommand, isTerminalReady]);
 
 	// Smooth scroll to bottom using Lenis
 	useEffect(() => {
@@ -104,9 +138,16 @@ export default function Home() {
 	}, [commands]);
 
 	return (
-		<LoadingProvider>
+		<>
 			<Background />
 			<Preloader onLoadingComplete={() => setShowTerminal(true)} />
+
+			{/* Shortcut Panel */}
+			<ShortcutPanel
+				onCommandSelect={handleCommand}
+				disabled={!isTerminalReady}
+				show={showTerminal}
+			/>
 
 			{/* Browser Overlay */}
 			<AnimatePresence>
@@ -160,12 +201,26 @@ export default function Home() {
 										/>
 									</div>
 								))}
-								{!browserCommand && <Prompt onCommand={handleCommand} />}
+								{!browserCommand && (
+									<Prompt
+										onCommand={handleCommand}
+										commandHistory={commandHistory}
+										disabled={!isTerminalReady}
+									/>
+								)}
 							</div>
 						</div>
 					</div>
 				</TerminalContainer>
 			</motion.div>
+		</>
+	);
+}
+
+export default function Home() {
+	return (
+		<LoadingProvider>
+			<HomeContent />
 		</LoadingProvider>
 	);
 }
