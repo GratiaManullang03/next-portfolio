@@ -46,14 +46,12 @@ const RotatingWord = ({ text, color }: { text: string; color: string }) => {
 								y: "100%",
 								opacity: 0,
 								rotateX: -90,
-								filter: "blur(4px)",
 							},
-							animate: { y: 0, opacity: 1, rotateX: 0, filter: "blur(0px)" },
+							animate: { y: 0, opacity: 1, rotateX: 0 },
 							exit: {
 								y: "-100%",
 								opacity: 0,
 								rotateX: 90,
-								filter: "blur(4px)",
 							},
 						}}
 						transition={{ type: "spring", damping: 12, stiffness: 200 }}

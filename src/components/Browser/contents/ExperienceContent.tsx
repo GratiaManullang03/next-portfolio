@@ -35,11 +35,10 @@ const containerVariants: Variants = {
 };
 
 const cardVariants: Variants = {
-	hidden: { opacity: 0, x: -30, filter: "blur(10px)" },
+	hidden: { opacity: 0, x: -30 },
 	show: {
 		opacity: 1,
 		x: 0,
-		filter: "blur(0px)",
 		transition: { type: "spring", stiffness: 40, damping: 15 },
 	},
 };
