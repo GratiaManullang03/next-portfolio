@@ -206,6 +206,11 @@ export default function ChatContent() {
 		setIsTyping(true);
 
 		try {
+			console.log("Sending request to chat API...", {
+				message: userMsg.content,
+				session_id: sessionId,
+			});
+
 			const response = await fetch(
 				"https://graxya-bot.vercel.app/api/v1/chat/",
 				{
@@ -223,6 +228,13 @@ export default function ChatContent() {
 				}
 			);
 
+			console.log("Response received:", {
+				ok: response.ok,
+				status: response.status,
+				statusText: response.statusText,
+				headers: Object.fromEntries(response.headers.entries()),
+			});
+
 			if (!response.ok)
 				throw new Error(`HTTP error! status: ${response.status}`);
 			if (!response.body) throw new Error("No response body");
@@ -232,31 +244,44 @@ export default function ChatContent() {
 			let done = false;
 			let buffer = "";
 
+			console.log("Starting to read stream...");
+
 			while (!done) {
 				const { value, done: doneReading } = await reader.read();
 				done = doneReading;
 
 				if (value) {
-					buffer += decoder.decode(value, { stream: !done });
+					const chunk = decoder.decode(value, { stream: !done });
+					console.log("Received chunk:", chunk);
+					buffer += chunk;
 					const lines = buffer.split("\n");
 					buffer = lines.pop() || "";
 
 					for (const line of lines) {
 						if (!line.trim()) continue;
+						console.log("Processing line:", line);
 						if (line.startsWith("data: ")) {
 							const jsonStr = line.replace("data: ", "").trim();
+							console.log("JSON string:", jsonStr);
 							if (jsonStr === "{'type': 'done'}" || jsonStr === "[DONE]") {
+								console.log("Stream done");
 								done = true;
 								break;
 							}
 							const parsed = parseStreamLine(jsonStr);
+							console.log("Parsed:", parsed);
 							if (parsed && parsed.type === "content" && parsed.content) {
 								streamBufferRef.current += parsed.content;
+								console.log(
+									"Updated buffer:",
+									streamBufferRef.current.substring(0, 50) + "..."
+								);
 							}
 						}
 					}
 				}
 			}
+			console.log("Stream reading completed");
 		} catch (error) {
 			console.error("Chat Error:", error);
 			streamBufferRef.current =

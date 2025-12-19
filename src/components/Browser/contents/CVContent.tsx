@@ -71,6 +71,7 @@ export default function CVContent() {
 	const [isLoading, setIsLoading] = useState(true);
 	const [subtitleIndex, setSubtitleIndex] = useState(0);
 	const [titleIndex, setTitleIndex] = useState(0);
+	const [loadError, setLoadError] = useState(false);
 	const pdfUrl = "/files/CV-FelixGratiaMangaturManullang.pdf";
 
 	useEffect(() => {
@@ -82,9 +83,15 @@ export default function CVContent() {
 			setTitleIndex((prev) => (prev + 1) % TITLES.length);
 		}, 4000);
 
+		// Auto-hide loading after 2 seconds as fallback
+		const loadingTimeout = setTimeout(() => {
+			setIsLoading(false);
+		}, 2000);
+
 		return () => {
 			clearInterval(subInterval);
 			clearInterval(mainInterval);
+			clearTimeout(loadingTimeout);
 		};
 	}, []);
 
@@ -193,19 +200,35 @@ export default function CVContent() {
 							</div>
 						</div>
 					)}
-					<object
-						data={pdfUrl}
-						type="application/pdf"
-						className="w-full h-full bg-[#1a1a1a]"
-						onLoad={() => setIsLoading(false)}
-					>
+					{loadError ? (
+						<div className="w-full h-full flex items-center justify-center bg-[#1a1a1a]">
+							<div className="flex flex-col items-center gap-4 text-center px-4">
+								<FiFileText className="w-16 h-16 text-red-500/50" />
+								<p className="font-mono text-gray-400 text-sm">
+									Failed to load PDF viewer.
+								</p>
+								<a
+									href={pdfUrl}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white font-mono text-xs rounded hover:bg-purple-600 transition-colors"
+								>
+									<FiExternalLink /> Open PDF in New Tab
+								</a>
+							</div>
+						</div>
+					) : (
 						<iframe
 							src={pdfUrl}
 							className="w-full h-full border-0 bg-[#1a1a1a]"
 							onLoad={() => setIsLoading(false)}
+							onError={() => {
+								setIsLoading(false);
+								setLoadError(true);
+							}}
 							title="Curriculum Vitae"
 						/>
-					</object>
+					)}
 				</div>
 			</div>
 		</div>
